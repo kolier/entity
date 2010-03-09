@@ -451,7 +451,7 @@ function entity_metadata_field_text_formats() {
 /**
  * Access callback for the node entity.
  */
-function entity_metadata_node_access($op, $node = NULL, $account = NULL) {
+function entity_metadata_node_access($op, $entity_type, $node = NULL, $account = NULL) {
   if (isset($node)) {
     return node_access($op, $node, $account);
   }
@@ -468,7 +468,7 @@ function entity_metadata_node_access($op, $node = NULL, $account = NULL) {
 /**
  * Access callback for the user entity.
  */
-function entity_metadata_user_access($op, $entity = NULL, $account = NULL, $entity_type) {
+function entity_metadata_user_access($op, $entity_type, $entity = NULL, $account = NULL) {
   $account = isset($account) ? $account : $GLOBALS['user'];
   // Grant access to the users own user account and to the anonymous one.
   if (isset($entity) && $op != 'delete' && (($entity->uid == $account->uid && $entity->uid) || (!$entity->uid && $op == 'view'))) {
@@ -483,7 +483,7 @@ function entity_metadata_user_access($op, $entity = NULL, $account = NULL, $enti
 /**
  * Access callback for the comment entity.
  */
-function entity_metadata_comment_access($op, $entity = NULL, $account = NULL) {
+function entity_metadata_comment_access($op, $entity_type, $entity = NULL, $account = NULL) {
   if (isset($entity) && !isset($account) && comment_access($op, $entity)) {
     return TRUE;
   }
@@ -496,7 +496,7 @@ function entity_metadata_comment_access($op, $entity = NULL, $account = NULL) {
 /**
  * Access callback for the taxonomy entities.
  */
-function entity_metadata_taxonomy_access($op, $entity = NULL, $account = NULL, $entity_type) {
+function entity_metadata_taxonomy_access($op, $entity_type, $entity = NULL, $account = NULL) {
   if ($entity_type == 'taxonomy_vocabulary') {
     return user_access('administer taxonomy', $account);
   }
@@ -512,7 +512,7 @@ function entity_metadata_taxonomy_access($op, $entity = NULL, $account = NULL, $
 /**
  * Callback to determine access for properties which are fields.
  */
-function entity_metadata_field_access_callback($op, $name, $entity = NULL, $account = NULL, $entity_type) {
+function entity_metadata_field_access_callback($op, $name, $entity_type, $entity = NULL, $account = NULL) {
   $field_name = str_replace('-', '_', $name);
   $field = field_info_field($field_name);
   return field_access($op, $field, $entity_type, $entity, $account);
