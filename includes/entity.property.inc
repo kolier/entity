@@ -42,6 +42,21 @@ function entity_get_property_info($entity_type = NULL) {
 }
 
 /**
+ * Returns the default information for an entity property.
+ *
+ * @see hook_entity_property_info()
+ *
+ * @return
+ *   An array of optional property information keys mapped to their defaults.
+ */
+function entity_property_info_defaults() {
+  return array(
+    'type' => 'text',
+    'getter callback' => 'entity_property_verbatim_get',
+  );
+}
+
+/**
  * Gets an array of info about all properties of a given entity type.
  *
  * In contrast to entity_get_property_info(), this function returns info about
@@ -300,6 +315,20 @@ function entity_property_list_extract_type($type) {
     return substr($type, 5, -1);
   }
   return FALSE;
+}
+
+/**
+ * Extracts the innermost type for a list type string like list<date>.
+ *
+ * @return
+ *   The innermost type in the nested list type, or the type itself if it is no
+ *   list type.
+ */
+function entity_property_list_inner_type($type) {
+  while (strpos($type, 'list<') === 0 && $type[strlen($type)-1] == '>') {
+    $type = substr($type, 5, -1);
+  }
+  return $type;
 }
 
 /**

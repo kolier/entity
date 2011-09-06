@@ -10,8 +10,9 @@
  */
 function entity_views_data() {
   $data = array();
+
   foreach (entity_crud_get_info() as $type => $info) {
-    // Only enable the integration by default, it we know the module providing
+    // Only enable the integration by default if we know the module providing
     // the entity and it does not provide views integration yet.
     if (!isset($info['views controller class'])) {
       $info['views controller class'] = isset($info['module']) && !module_hook($info['module'], 'views_data') ? 'EntityDefaultViewsController' : FALSE;
@@ -27,7 +28,114 @@ function entity_views_data() {
     }
   }
 
+  // Add generic (non-base) tables for all entity types.
+  foreach (entity_get_info() as $type => $info) {
+    $table = entity_views_table_definition($type);
+    if ($table) {
+      $data['entity_' . $type] = $table;
+    }
+  }
+
   return $data;
+}
+
+/**
+ * Helper function for getting the entity Views table definition for a type.
+ *
+ * @param $type
+ *   The entity type whose table definition should be return.
+ *
+ * @return
+ *   An array containing a generic Views table definition for the entity type.
+ */
+function entity_views_table_definition($type) {
+  $tables = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($tables[$type])) {
+    $tables[$type] = array();
+    foreach (entity_get_all_property_info($type) as $key => $property) {
+      $tables[$type] += entity_views_field_definition($key, $property);
+    }
+  }
+
+  return $tables[$type];
+}
+
+/**
+ * Helper function for creating a Views field definition.
+ *
+ * @param $key
+ *   The key to be used for the property's field handler (and as the prefix for
+ *   nested ones).
+ * @param array $property
+ *   The property information for which to create a field definition.
+ * @param $title_prefix
+ *   Internal use only.
+ *
+ * @return
+ *   An array containing one or more Views field definitions, mapped to their
+ *   keys.
+ */
+function entity_views_field_definition($key, array $property, $title_prefix = '') {
+  $ret = array();
+  $additional = array();
+
+  // Field handlers for the entity tables, by type.
+  $field_handlers = array(
+    'text'         => 'entity_handler_field_text',
+    'token'        => 'entity_handler_field_text',
+    'integer'      => 'entity_handler_field_numeric',
+    'decimal'      => 'entity_handler_field_numeric',
+    'date'         => 'entity_handler_field_date',
+    'duration'     => 'entity_handler_field_duration',
+    'boolean'      => 'entity_handler_field_boolean',
+    'uri'          => 'entity_handler_field_uri',
+    'field'        => 'entity_handler_field_field',
+    'entity'       => 'entity_handler_field_entity',
+    'relationship' => 'entity_handler_relationship',
+  );
+
+  $property += entity_property_info_defaults();
+  $type = entity_property_list_inner_type($property['type']);
+  $title = $title_prefix . $property['label'];
+  if (entity_get_info($type)) {
+    // Allow other modules to specify field handlers for specific entity
+    // types in the alter hook.
+    if (!isset($field_handlers[$type])) {
+      $type = 'entity';
+    }
+    // We also let them unset the relationship handler, if they want to.
+    if (isset($field_handlers['relationship'])) {
+      $additional['relationship'] = array(
+        'handler' => $field_handlers['relationship'],
+        'base' => 'entity_' . $type,
+        'field' => $key,
+        'label' => $title,
+      );
+    }
+  }
+  elseif (!empty($property['field'])) {
+    $type = 'field';
+  }
+
+  if (isset($field_handlers[$type])) {
+    $ret[$key] = array(
+      'title' => $title,
+      'help' => empty($property['description']) ? t('(No information available)') : $property['description'],
+      'field' => array(
+        'handler' => $field_handlers[$type],
+        'type' => $property['type'],
+      ),
+    );
+    $ret[$key] += $additional;
+  }
+  if (!empty($property['property info'])) {
+    foreach ($property['property info'] as $nested_key => $nested_property) {
+      $ret += entity_views_field_definition($key . ':' . $nested_key, $nested_property, $title . ' » ');
+    }
+  }
+
+  return $ret;
 }
 
 /**
