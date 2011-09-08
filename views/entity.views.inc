@@ -127,6 +127,9 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
         'type' => $property['type'],
       ),
     );
+    if ($type == 'decimal') {
+      $ret[$key]['field']['float'] = TRUE;
+    }
     $ret[$key] += $additional;
   }
   if (!empty($property['property info'])) {
