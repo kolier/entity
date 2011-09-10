@@ -29,27 +29,24 @@ class entity_handler_field_field extends views_handler_field_field {
   public $base_field;
 
   /**
-   * Overriden to add the field for the entity id.
+   * Overridden to add the field for the entity ID (if necessary).
    */
-  function query() {
-    // @todo Figure out exactly what relationship data we got here, and what we
-    //   need to do about it. (Anything at all?)
+  public function query() {
+    EntityFieldHandlerHelper::query($this);
   }
 
   /**
    * Load the entities for all rows that are about to be displayed.
    */
-  function pre_render(&$values) {
+  public function pre_render(&$values) {
     parent::pre_render($values);
-    if (!empty($values)) {
-      list($this->entity_type, $this->entities) = $this->query->get_result_entities($values, !empty($this->relationship) ? $this->relationship : NULL);
-    }
+    EntityFieldHandlerHelper::pre_render($this, $values);
   }
 
   /**
    * Overridden to get the entity and put it where it is assumed to be.
    */
-  function get_value($values, $field = NULL) {
+  public function get_value($values, $field = NULL) {
     if (!isset($this->entities[$this->view->row_index])) {
       return NULL;
     }

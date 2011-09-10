@@ -29,37 +29,28 @@ class entity_handler_field_duration extends views_handler_field {
   public $base_field;
 
   /**
-   * Overriden to add the field for the entity id.
+   * Overridden to add the field for the entity ID (if necessary).
    */
-  function query() {
-    // @todo Figure out exactly what relationship data we got here, and what we
-    //   need to do about it. (Anything at all?)
+  public function query() {
+    EntityFieldHandlerHelper::query($this);
   }
 
   /**
    * Load the entities for all rows that are about to be displayed.
    */
-  function pre_render(&$values) {
+  public function pre_render(&$values) {
     parent::pre_render($values);
-    if (!empty($values)) {
-      list($this->entity_type, $this->entities) = $this->query->get_result_entities($values, !empty($this->relationship) ? $this->relationship : NULL);
-    }
+    EntityFieldHandlerHelper::pre_render($this, $values);
   }
 
   /**
    * Overridden to use a metadata wrapper.
    */
-  function get_value($values, $field = NULL) {
-    if (!isset($this->entities[$this->view->row_index])) {
-      return FALSE;
-    }
-    $field = isset($field) ? $field : $this->real_field;
-    $entity = $this->entities[$this->view->row_index];
-    $wrapper = entity_metadata_wrapper($this->entity_type, $entity);
-    return isset($wrapper->$field) ? $wrapper->$field->value() : FALSE;
+  public function get_value($values, $field = NULL) {
+    return EntityFieldHandlerHelper::get_value($this, $values, $field);
   }
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $options['format_interval'] = array('default' => TRUE);
@@ -70,7 +61,7 @@ class entity_handler_field_duration extends views_handler_field {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form['format_interval'] = array(
@@ -101,16 +92,16 @@ class entity_handler_field_duration extends views_handler_field {
     );
   }
 
-  function render($values) {
+  public function render($values) {
     $value = $this->get_value($values);
 
     if ($this->options['format_interval']) {
       $value = format_interval($value, (int) $this->options['granularity']);
     }
 
-    return $this->sanitize_value($this->options['prefix'], 'xss')
-      . $this->sanitize_value($value)
-      . $this->sanitize_value($this->options['suffix'], 'xss');
+    return $this->sanitize_value($this->options['prefix'], 'xss') .
+        $this->sanitize_value($value) .
+        $this->sanitize_value($this->options['suffix'], 'xss');
   }
 
 }

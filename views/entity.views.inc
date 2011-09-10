@@ -90,6 +90,7 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
     'duration'     => 'entity_handler_field_duration',
     'boolean'      => 'entity_handler_field_boolean',
     'uri'          => 'entity_handler_field_uri',
+    'options'      => 'entity_handler_field_options',
     'field'        => 'entity_handler_field_field',
     'entity'       => 'entity_handler_field_entity',
     'relationship' => 'entity_handler_relationship',
@@ -117,6 +118,15 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
   elseif (!empty($property['field'])) {
     $type = 'field';
   }
+  // Copied from EntityMetadataWrapper::optionsList()
+  elseif (isset($property['options list']) && is_callable($property['options list'])) {
+    // If this is a nested property, we need to get rid of all prefixes first.
+    $field_name = ltrim(substr($key, strrpos($key, ':')), ':');
+    $options = call_user_func($property['options list'], $field_name, $property, 'view');
+    if ($options) {
+      $type = 'options';
+    }
+  }
 
   if (isset($field_handlers[$type])) {
     $ret[$key] = array(
@@ -129,6 +139,9 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
     );
     if ($type == 'decimal') {
       $ret[$key]['field']['float'] = TRUE;
+    }
+    if ($type == 'options') {
+      $ret[$key]['field']['options'] = $options;
     }
     $ret[$key] += $additional;
   }
