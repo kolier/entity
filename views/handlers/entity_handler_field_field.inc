@@ -42,7 +42,7 @@ class entity_handler_field_field extends views_handler_field_field {
   function pre_render(&$values) {
     parent::pre_render($values);
     if (!empty($values)) {
-      list($this->entity_type, $this->entities) = $this->query->get_result_entities($values, !empty($this->relationship) ? $this->relationship : NULL, $this->field_alias);
+      list($this->entity_type, $this->entities) = $this->query->get_result_entities($values, !empty($this->relationship) ? $this->relationship : NULL);
     }
   }
 
