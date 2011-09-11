@@ -79,6 +79,7 @@ function entity_views_table_definition($type) {
 function entity_views_field_definition($key, array $property, $title_prefix = '') {
   $ret = array();
   $additional = array();
+  $additional_field = array();
 
   // Field handlers for the entity tables, by type.
   $field_handlers = array(
@@ -100,6 +101,7 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
   $type = entity_property_list_inner_type($property['type']);
   $title = $title_prefix . $property['label'];
   if (entity_get_info($type)) {
+    $additional_field = array('entity type' => $type);
     // Allow other modules to specify field handlers for specific entity
     // types in the alter hook.
     if (!isset($field_handlers[$type])) {
@@ -125,7 +127,11 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
     $options = call_user_func($property['options list'], $field_name, $property, 'view');
     if ($options) {
       $type = 'options';
+      $additional_field = array('options' => $options);
     }
+  }
+  elseif ($type == 'decimal') {
+    $additional_field = array('float' => TRUE);
   }
 
   if (isset($field_handlers[$type])) {
@@ -137,12 +143,7 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
         'type' => $property['type'],
       ),
     );
-    if ($type == 'decimal') {
-      $ret[$key]['field']['float'] = TRUE;
-    }
-    if ($type == 'options') {
-      $ret[$key]['field']['options'] = $options;
-    }
+    $ret[$key]['field'] += $additional_field;
     $ret[$key] += $additional;
   }
   if (!empty($property['property info'])) {
