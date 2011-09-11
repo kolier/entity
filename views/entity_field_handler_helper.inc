@@ -62,7 +62,7 @@ class EntityFieldHandlerHelper {
     }
     $entity = $handler->entities[$handler->view->row_index];
     $wrapper = entity_metadata_wrapper($handler->entity_type, $entity);
-    return isset($wrapper->$field) ? $wrapper->$field->value() : $default;
+    return isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
   }
 
 }
