@@ -52,9 +52,13 @@ function entity_views_table_definition($type) {
   $tables = &drupal_static(__FUNCTION__, array());
 
   if (!isset($tables[$type])) {
-    $tables[$type] = array();
+    $info = entity_get_info($type);
+    $tables[$type]['table'] = array(
+      'group' => $info['label'],
+      'entity type' => $type,
+    );
     foreach (entity_get_all_property_info($type) as $key => $property) {
-      $tables[$type] += entity_views_field_definition($key, $property);
+      entity_views_field_definition($key, $property, $tables[$type]);
     }
   }
 
@@ -64,22 +68,25 @@ function entity_views_table_definition($type) {
 /**
  * Helper function for creating a Views field definition.
  *
- * @param $key
+ * @param $field
  *   The key to be used for the property's field handler (and as the prefix for
  *   nested ones).
  * @param array $property
  *   The property information for which to create a field definition.
+ * @param array $table
+ *   The table into which the definition should be inserted.
  * @param $title_prefix
  *   Internal use only.
- *
- * @return
- *   An array containing one or more Views field definitions, mapped to their
- *   keys.
  */
-function entity_views_field_definition($key, array $property, $title_prefix = '') {
-  $ret = array();
+function entity_views_field_definition($field, array $property, array &$table, $title_prefix = '') {
   $additional = array();
   $additional_field = array();
+
+  // Create a valid Views field identifier (no colons, etc.).
+  $key = _entity_views_field_identifier($field, $table);
+  if ($key != $field) {
+    $additional['real field'] = $field;
+  }
 
   // Field handlers for the entity tables, by type.
   $field_handlers = array(
@@ -96,25 +103,26 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
     'entity'       => 'entity_handler_field_entity',
     'relationship' => 'entity_handler_relationship',
   );
+  // @todo Some alter hook?
 
   $property += entity_property_info_defaults();
   $type = entity_property_list_inner_type($property['type']);
   $title = $title_prefix . $property['label'];
   if (entity_get_info($type)) {
     $additional_field = array('entity type' => $type);
-    // Allow other modules to specify field handlers for specific entity
-    // types in the alter hook.
-    if (!isset($field_handlers[$type])) {
-      $type = 'entity';
-    }
-    // We also let them unset the relationship handler, if they want to.
+    // Others might have unset the relationship handler in the alter hook.
     if (isset($field_handlers['relationship'])) {
       $additional['relationship'] = array(
         'handler' => $field_handlers['relationship'],
         'base' => 'entity_' . $type,
-        'field' => $key,
+        'base field' => $key,
+        'relationship field' => $field,
         'label' => $title,
       );
+    }
+    // They could also add handlers for specific entity types.
+    if (!isset($field_handlers[$type])) {
+      $type = 'entity';
     }
   }
   elseif (!empty($property['field'])) {
@@ -135,24 +143,49 @@ function entity_views_field_definition($key, array $property, $title_prefix = ''
   }
 
   if (isset($field_handlers[$type])) {
-    $ret[$key] = array(
+    $table += array($key => array());
+    $table[$key] += array(
       'title' => $title,
       'help' => empty($property['description']) ? t('(No information available)') : $property['description'],
-      'field' => array(
-        'handler' => $field_handlers[$type],
-        'type' => $property['type'],
-      ),
+      'field' => array(),
     );
-    $ret[$key]['field'] += $additional_field;
-    $ret[$key] += $additional;
+    $table[$key]['field'] += array(
+      'handler' => $field_handlers[$type],
+      'type' => $property['type'],
+    );
+    $table[$key]['field'] += $additional_field;
+    $table[$key] += $additional;
   }
   if (!empty($property['property info'])) {
     foreach ($property['property info'] as $nested_key => $nested_property) {
-      $ret += entity_views_field_definition($key . ':' . $nested_key, $nested_property, $title . ' » ');
+      entity_views_field_definition($key . ':' . $nested_key, $nested_property, $table, $title . ' » ');
     }
   }
+}
 
-  return $ret;
+/**
+ * Helper function for creating valid Views field identifiers out of property accessors.
+ *
+ * @return string
+ *   A valid Views field identifier that isn't yet used as a key in $table.
+ */
+function _entity_views_field_identifier($field, array $table) {
+  $aliases = &drupal_static(__FUNCTION__, array());
+  // If we re-use aliases (tables might be different), we have to make sure we
+  // never return the same alias for two different fields (even this is highly
+  // unlikely).
+  $used = array_flip($aliases);
+
+  if (!isset($aliases[$field])) {
+    $key = $base = preg_replace('/[^a-zA-Z0-9]+/S', '_', $field);
+    $i = 0;
+    while (isset($table[$key]) || (isset($used[$key]) && $used[$key] !== $field)) {
+      $key = $base . '_' . ++$i;
+    }
+    $aliases[$field] = $key;
+  }
+
+  return $aliases[$field];
 }
 
 /**
