@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains the entity_handler_field_uri class.
+ * Contains the entity_views_handler_field_text class.
  */
 
 /**
- * Field handler to provide simple renderer that turns a URL into a clickable link.
+ * A handler to display text data.
+ *
+ * Overrides the default Views handler to retrieve the data from an entity.
  *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_uri extends views_handler_field_url {
+class entity_views_handler_field_text extends views_handler_field {
 
   /**
    * Stores the entity type which is loaded by this field.

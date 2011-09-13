@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains the entity_handler_field_date class.
+ * Contains the entity_views_handler_field_date class.
  */
 
 /**
  * A handler to provide proper displays for dates.
  *
+ * Overrides the default Views handler to retrieve the data from an entity.
+ *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_date extends views_handler_field_date {
+class entity_views_handler_field_date extends views_handler_field_date {
 
   /**
    * Stores the entity type which is loaded by this field.

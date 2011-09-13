@@ -2,20 +2,17 @@
 
 /**
  * @file
- * Contains the entity_handler_field_numeric class.
+ * Contains the entity_views_handler_field_uri class.
  */
 
 /**
- * Render a field as a numeric value
+ * Field handler to provide simple renderer that turns a URL into a clickable link.
  *
- * Definition terms:
- * - float: If true this field contains a decimal value. If unset this field
- *          will be assumed to be integer.
+ * Overrides the default Views handler to retrieve the data from an entity.
  *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_numeric extends views_handler_field_numeric {
+class entity_views_handler_field_uri extends views_handler_field_url {
 
   /**
    * Stores the entity type which is loaded by this field.

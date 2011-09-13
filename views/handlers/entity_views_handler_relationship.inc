@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains the entity_handler_relationship class.
+ * Contains the entity_views_handler_relationship class.
  */
 
 /**
@@ -10,7 +10,7 @@
  *
  * @ingroup views_field_handlers
  */
-class entity_handler_relationship extends views_handler_relationship {
+class entity_views_handler_relationship extends views_handler_relationship {
 
   // @todo What the heck have we got to do here?
 

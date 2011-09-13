@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains the entity_handler_field_entity class.
+ * Contains the entity_views_handler_field_entity class.
  */
 
 /**
@@ -10,8 +10,7 @@
  *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_entity extends views_handler_field_entity {
+class entity_views_handler_field_entity extends views_handler_field_entity {
 
   /**
    * Overridden to add the field for the entity ID (if necessary).

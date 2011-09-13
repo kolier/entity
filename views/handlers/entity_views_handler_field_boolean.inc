@@ -2,27 +2,17 @@
 
 /**
  * @file
- * Contains the entity_handler_field_boolean class.
+ * Contains the entity_views_handler_field_boolean class.
  */
 
 /**
  * A handler to provide proper displays for booleans.
  *
- * Allows for display of true/false, yes/no, on/off, enabled/disabled.
- *
- * Definition terms:
- *   - output formats: An array where the first entry is displayed on boolean true
- *      and the second is displayed on boolean false. An example for sticky is:
- *      @code
- *      'output formats' => array(
- *        'sticky' => array(t('Sticky'), ''),
- *      ),
- *      @endcode
+ * Overrides the default Views handler to retrieve the data from an entity.
  *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_boolean extends views_handler_field_boolean {
+class entity_views_handler_field_boolean extends views_handler_field_boolean {
 
   /**
    * Stores the entity type which is loaded by this field.

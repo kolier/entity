@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains the entity_handler_field_text class.
+ * Contains the entity_views_handler_field_field class.
  */
 
 /**
- * A handler to display text data.
+ * A handler to provide proper displays for Field API fields.
+ *
+ * Overrides the default Views handler to retrieve the data from an entity.
  *
  * @ingroup views_field_handlers
  */
-// Class contents are mostly copied from views_handler_field_entity.
-class entity_handler_field_text extends views_handler_field {
+class entity_views_handler_field_field extends views_handler_field_field {
 
   /**
    * Stores the entity type which is loaded by this field.
@@ -44,10 +45,17 @@ class entity_handler_field_text extends views_handler_field {
   }
 
   /**
-   * Overridden to use a metadata wrapper.
+   * Overridden to get the entity and put it where it is assumed to be.
    */
   public function get_value($values, $field = NULL) {
-    return EntityFieldHandlerHelper::get_value($this, $values, $field);
+    if (!isset($this->entities[$this->view->row_index])) {
+      return NULL;
+    }
+    $entity = $this->entities[$this->view->row_index];
+    $values->_field_data[$this->field_alias]['entity'] = $entity;
+    $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;
+
+    return parent::get_value($values, $field);
   }
 
 }

@@ -10,6 +10,7 @@
  *
  * Used by the generic entity field handlers to avoid code duplication.
  */
+// Class contents are mostly copied from views_handler_field_entity.
 class EntityFieldHandlerHelper {
 
   /**

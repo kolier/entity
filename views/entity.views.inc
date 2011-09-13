@@ -90,18 +90,18 @@ function entity_views_field_definition($field, array $property, array &$table, $
 
   // Field handlers for the entity tables, by type.
   $field_handlers = array(
-    'text'         => 'entity_handler_field_text',
-    'token'        => 'entity_handler_field_text',
-    'integer'      => 'entity_handler_field_numeric',
-    'decimal'      => 'entity_handler_field_numeric',
-    'date'         => 'entity_handler_field_date',
-    'duration'     => 'entity_handler_field_duration',
-    'boolean'      => 'entity_handler_field_boolean',
-    'uri'          => 'entity_handler_field_uri',
-    'options'      => 'entity_handler_field_options',
-    'field'        => 'entity_handler_field_field',
-    'entity'       => 'entity_handler_field_entity',
-    'relationship' => 'entity_handler_relationship',
+    'text'         => 'entity_views_handler_field_text',
+    'token'        => 'entity_views_handler_field_text',
+    'integer'      => 'entity_views_handler_field_numeric',
+    'decimal'      => 'entity_views_handler_field_numeric',
+    'date'         => 'entity_views_handler_field_date',
+    'duration'     => 'entity_views_handler_field_duration',
+    'boolean'      => 'entity_views_handler_field_boolean',
+    'uri'          => 'entity_views_handler_field_uri',
+    'options'      => 'entity_views_handler_field_options',
+    'field'        => 'entity_views_handler_field_field',
+    'entity'       => 'entity_views_handler_field_entity',
+    'relationship' => 'entity_views_handler_relationship',
   );
   // @todo Some alter hook?
 
