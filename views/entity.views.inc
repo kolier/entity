@@ -109,7 +109,7 @@ function entity_views_field_definition($field, array $property, array &$table, $
   $type = entity_property_list_inner_type($property['type']);
   $title = $title_prefix . $property['label'];
   if (entity_get_info($type)) {
-    $additional_field = array('entity type' => $type);
+    $additional_field['entity type'] = $type;
     // Others might have unset the relationship handler in the alter hook.
     if (isset($field_handlers['relationship'])) {
       $additional['relationship'] = array(
@@ -127,6 +127,11 @@ function entity_views_field_definition($field, array $property, array &$table, $
   }
   elseif (!empty($property['field'])) {
     $type = 'field';
+    $field_name = ltrim(substr($key, strrpos($key, ':')), ':');
+    $additional_field['field_name'] = $field_name;
+    $additional_field['entity_tables'] = array();
+    $additional_field['entity type'] = $table['table']['entity type'];
+    $additional_field['is revision'] = FALSE;
   }
   // Copied from EntityMetadataWrapper::optionsList()
   elseif (isset($property['options list']) && is_callable($property['options list'])) {
@@ -135,11 +140,11 @@ function entity_views_field_definition($field, array $property, array &$table, $
     $options = call_user_func($property['options list'], $field_name, $property, 'view');
     if ($options) {
       $type = 'options';
-      $additional_field = array('options' => $options);
+      $additional_field['options'] = $options;
     }
   }
   elseif ($type == 'decimal') {
-    $additional_field = array('float' => TRUE);
+    $additional_field['float'] = TRUE;
   }
 
   if (isset($field_handlers[$type])) {

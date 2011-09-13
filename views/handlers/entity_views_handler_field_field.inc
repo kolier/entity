@@ -30,10 +30,24 @@ class entity_views_handler_field_field extends views_handler_field_field {
   public $base_field;
 
   /**
+   * Return TRUE if the user has access to view this field.
+   */
+  function access() {
+    return field_access('view', $this->field_info, $this->definition['entity type']);
+  }
+
+  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
-  public function query() {
+  public function query($use_groupby = FALSE) {
     EntityFieldHandlerHelper::query($this);
+  }
+
+  /**
+   * Override so it doesn't do any harm (or, anything at all).
+   */
+  public function post_execute(&$values) {
+
   }
 
   /**
@@ -45,6 +59,22 @@ class entity_views_handler_field_field extends views_handler_field_field {
   }
 
   /**
+   * Overridden to get the items our way.
+   */
+  public function get_items($values) {
+    // Only try to render the field if it is even present on this bundle.
+    // Otherwise, field_view_field() will trigger a fatal.
+    // The $this->get_value() call is actually necessary in any case, to fill
+    // some $values keys required by set_items().
+    $entity = $this->get_value($values, 'entity');
+    list (, , $bundle) = entity_extract_ids($this->entity_type, $entity);
+    if (field_info_instance($this->entity_type, $this->definition['field_name'], $bundle)) {
+      return $this->set_items($values, $this->view->row_index);
+    }
+    return array();
+  }
+
+  /**
    * Overridden to get the entity and put it where it is assumed to be.
    */
   public function get_value($values, $field = NULL) {
@@ -52,8 +82,13 @@ class entity_views_handler_field_field extends views_handler_field_field {
       return NULL;
     }
     $entity = $this->entities[$this->view->row_index];
-    $values->_field_data[$this->field_alias]['entity'] = $entity;
-    $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;
+    if (empty($values->_field_data[$this->field_alias]['entity'])) {
+      $values->_field_data[$this->field_alias]['entity'] = $entity;
+      $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;
+    }
+    if ($field == 'entity') {
+      return $entity;
+    }
 
     return parent::get_value($values, $field);
   }
