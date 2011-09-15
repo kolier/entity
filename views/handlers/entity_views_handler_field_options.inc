@@ -54,6 +54,7 @@ class entity_views_handler_field_options extends views_handler_field {
    */
   public function option_definition() {
     $options = parent::option_definition();
+    $options += EntityFieldHandlerHelper::option_definition($this);
     $options['format_name'] = array('default' => TRUE);
     return $options;
   }
@@ -63,6 +64,7 @@ class entity_views_handler_field_options extends views_handler_field {
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    EntityFieldHandlerHelper::options_form($this, $form, $form_state);
 
     $form['format_name'] = array(
       '#title' => t('Use human-readable name'),
@@ -75,8 +77,13 @@ class entity_views_handler_field_options extends views_handler_field {
 
 
   public function render($values) {
-    $value = $this->get_value($values);
+    return EntityFieldHandlerHelper::render($this, $values);
+  }
 
+  /**
+   * Render a single field value.
+   */
+  public function render_single_value($value, $values) {
     if ($this->options['format_name'] && isset($this->definition['options'][$value])) {
       $value = $this->definition['options'][$value];
     }

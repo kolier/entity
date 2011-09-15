@@ -51,4 +51,37 @@ class entity_views_handler_field_boolean extends views_handler_field_boolean {
     return EntityFieldHandlerHelper::get_value($this, $values, $field);
   }
 
+  /**
+   * Provide options for this handler.
+   */
+  public function option_definition() {
+    return parent::option_definition() + EntityFieldHandlerHelper::option_definition($this);
+  }
+
+  /**
+   * Provide a options form for this handler.
+   */
+  public function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    EntityFieldHandlerHelper::options_form($this, $form, $form_state);
+  }
+
+  /**
+   * Render the field.
+   *
+   * @param $values
+   *   The values retrieved from the database.
+   */
+  public function render($values) {
+    return EntityFieldHandlerHelper::render($this, $values);
+  }
+
+  /**
+   * Render a single field value.
+   */
+  public function render_single_value($value, $values) {
+    $values->_entity_properties[$this->field_alias] = $value;
+    return parent::render($values);
+  }
+
 }

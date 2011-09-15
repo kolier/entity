@@ -51,6 +51,7 @@ class entity_views_handler_field_duration extends views_handler_field {
 
   public function option_definition() {
     $options = parent::option_definition();
+    $options += EntityFieldHandlerHelper::option_definition($this);
 
     $options['format_interval'] = array('default' => TRUE);
     $options['granularity'] = array('default' => 2);
@@ -62,6 +63,7 @@ class entity_views_handler_field_duration extends views_handler_field {
 
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    EntityFieldHandlerHelper::options_form($this, $form, $form_state);
 
     $form['format_interval'] = array(
       '#type' => 'checkbox',
@@ -91,13 +93,23 @@ class entity_views_handler_field_duration extends views_handler_field {
     );
   }
 
+  /**
+   * Render the field.
+   *
+   * @param $values
+   *   The values retrieved from the database.
+   */
   public function render($values) {
-    $value = $this->get_value($values);
+    return EntityFieldHandlerHelper::render($this, $values);
+  }
 
+  /**
+   * Render a single field value.
+   */
+  public function render_single_value($value, $values) {
     if ($this->options['format_interval']) {
       $value = format_interval($value, (int) $this->options['granularity']);
     }
-
     return $this->sanitize_value($this->options['prefix'], 'xss') .
         $this->sanitize_value($value) .
         $this->sanitize_value($this->options['suffix'], 'xss');

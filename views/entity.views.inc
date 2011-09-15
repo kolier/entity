@@ -158,8 +158,8 @@ function entity_views_field_definition($field, array $property, array &$table, $
       'handler' => $field_handlers[$type],
       'type' => $property['type'],
     );
-    $table[$key]['field'] += $additional_field;
     $table[$key] += $additional;
+    $table[$key]['field'] += $additional_field;
   }
   if (!empty($property['property info'])) {
     foreach ($property['property info'] as $nested_key => $nested_property) {
