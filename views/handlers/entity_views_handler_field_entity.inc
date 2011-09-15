@@ -23,7 +23,7 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
    * Load the entities for all rows that are about to be displayed.
    */
   public function pre_render(&$values) {
-    parent::pre_render($values);
+    EntityFieldHandlerHelper::pre_render($this, $values);
   }
 
   /**
@@ -110,9 +110,8 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
    */
   public function render_entity_link($entity, $values) {
     $type = $this->definition['entity type'];
-    if (!is_object($entity)) {
-      $entity = entity_load($type, array($entity));
-      $entity = reset($entity);
+    if (!is_object($entity) && isset($entity)) {
+      $entity = entity_load_single($type, $entity);
     }
     if (!$entity) {
       return '';
@@ -139,9 +138,8 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
    */
   public function render_single_value($entity, $values) {
     $type = $this->definition['entity type'];
-    if (!is_object($entity)) {
-      $entity = entity_load($type, array($entity));
-      $entity = reset($entity);
+    if (!is_object($entity) && isset($entity)) {
+      $entity = entity_load_single($type, $entity);
     }
     if (!$entity) {
       return '';

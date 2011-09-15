@@ -50,8 +50,8 @@ class EntityFieldHandlerHelper {
     }
     $form['link_to_entity'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Link this field to the result item'),
-      '#description' => t('This will override any other link you have set.'),
+      '#title' => t('Link this field to its entity'),
+      '#description' => t("When using this, you should not set any other link on the field."),
       '#default_value' => $handler->options['link_to_entity'],
     );
   }
@@ -61,7 +61,7 @@ class EntityFieldHandlerHelper {
    */
   public static function query($handler) {
     // Some of the parent handlers might require this.
-    $handler->field_alias = $handler->real_field;
+    $handler->field_alias = ltrim(substr($handler->real_field, strrpos($handler->real_field, ':')), ':');
     // Add the field if the query plugin implements an add_field() method, just
     // like the default query plugin.
     if (method_exists($handler->query, 'add_field')) {
@@ -86,11 +86,81 @@ class EntityFieldHandlerHelper {
 
   /**
    * Load the entities for all rows that are about to be displayed.
+   *
+   * Automatically takes care of relationships, either defined via Views or via
+   * Entity API property selectors.
    */
   public static function pre_render($handler, &$values) {
-    if (!empty($values)) {
-      list($handler->entity_type, $handler->entities) = $handler->query->get_result_entities($values, !empty($handler->relationship) ? $handler->relationship : NULL);
+    if (empty($values)) {
+      return;
     }
+    if (method_exists($handler->query, 'get_result_wrappers')) {
+      list($type, $wrappers) = $handler->query->get_result_wrappers($values, NULL);
+    }
+    elseif (method_exists($handler->query, 'get_result_entities')) {
+      list($type, $entities) = $handler->query->get_result_entities($values, NULL);
+      $wrappers = entity_metadata_wrapper_multiple($type, $entities);
+    }
+    else {
+      return;
+    }
+
+    $relationship = self::construct_property_selector($handler);
+    if ($relationship) {
+      $wrappers = entity_metadata_extract_property_multiple($wrappers, $relationship);
+      unset($entities);
+      $w = $wrappers;
+      while (is_array($w)) {
+        $w = array_filter($w);
+        $w = reset($w);
+      }
+      if ($w) {
+        $type = $w->type();
+      }
+    }
+    $wrappers = array_filter($wrappers);
+
+    $handler->entity_type = $type;
+    $handler->entities = array();
+    $handler->wrappers = $wrappers;
+    if (isset($entities)) {
+      $handler->entities = array_filter($entities);
+    }
+    elseif (entity_get_info($type)) {
+      // We can just load the entities from the wrappers.
+      foreach ($wrappers as $id => $wrapper) {
+        $handler->entities[$id] = $wrapper->value();
+      }
+    }
+  }
+
+  /**
+   * Return a Entity API property selector for the given handler's relationship.
+   *
+   * @param $handler
+   *   The handler for which to construct the selector.
+   *
+   * @return
+   *   An Entity API property selector for the given handler's relationship.
+   *
+   * @see entity_metadata_extract_property()
+   */
+  public static function construct_property_selector($handler) {
+    if ($handler->relationship && !isset(self::$DEBUG1)) {
+      self::$DEBUG1 = TRUE;
+      dpm($handler->relationship);
+      dpm($handler->view->relationship);
+    }
+    // @todo Implement.
+    $ret = '';
+
+    // If we have a selector as the real_field, append this to the returned
+    // relationship selector.
+    if ($pos = strrpos($handler->real_field, ':')) {
+      $ret .= ($ret ? ':' : '') . substr($handler->real_field, 0, $pos);
+    }
+
+    return $ret;
   }
 
   /**
@@ -111,23 +181,24 @@ class EntityFieldHandlerHelper {
    *   The value to return if the entity or field are not present.
    */
   public static function get_value($handler, $values, $field = NULL, $default = NULL) {
-    $field = isset($field) ? $field : $handler->real_field;
-    if (!isset($values->_entity_properties[$field])) {
-      if (!isset($handler->entities[$handler->view->row_index])) {
-        $values->_entity_properties[$field] = $default;
+    $field = isset($field) ? $field : $handler->field_alias;
+    $relationship = self::construct_property_selector($handler);
+    $selector = $relationship ? "$relationship:$field" : $field;
+    if (!isset($values->_entity_properties[$selector])) {
+      if (!isset($handler->wrappers[$handler->view->row_index])) {
+        $values->_entity_properties[$selector] = $default;
       }
       else {
-        $entity = $handler->entities[$handler->view->row_index];
+        $wrapper = $handler->wrappers[$handler->view->row_index];
         if ($field === 'entity object') {
-          $values->_entity_properties[$field] = $entity;
+          $values->_entity_properties[$selector] = $wrapper->value();
         }
         else {
-          $wrapper = entity_metadata_wrapper($handler->entity_type, $entity);
-          $values->_entity_properties[$field] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+          $values->_entity_properties[$selector] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
         }
       }
     }
-    return $values->_entity_properties[$field];
+    return $values->_entity_properties[$selector];
   }
 
   /**
