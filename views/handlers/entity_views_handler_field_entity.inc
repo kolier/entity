@@ -100,13 +100,52 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
   }
 
   /**
-   * Render a single field value.
+   * Render a value as a link to the entity, if applicable.
+   *
+   * @param $value
+   *   The value to render.
+   * @param $values
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
    */
-  public function render_single_value($entity, $values) {
+  public function render_entity_link($entity, $values) {
+    $type = $this->definition['entity type'];
+    if (!is_object($entity)) {
+      $entity = entity_load($type, array($entity));
+      $entity = reset($entity);
+    }
     if (!$entity) {
       return '';
     }
+    $render = $this->render_single_value($entity, $values);
+    if (!$this->options['link_to_entity']) {
+      return $render;
+    }
+    if (is_object($entity) && ($url = entity_uri($type, $entity))) {
+      // We LOVE our core bugs! (http://drupal.org/node/1057242)
+      if ($type === 'file' && !is_array($url)) {
+        $url = array(
+          'path' => file_create_url($url),
+          'options' => array(),
+        );
+      }
+      return l($render, $url['path'], array('html' => TRUE) + $url['options']);
+    }
+    return $render;
+  }
+
+  /**
+   * Render a single field value.
+   */
+  public function render_single_value($entity, $values) {
     $type = $this->definition['entity type'];
+    if (!is_object($entity)) {
+      $entity = entity_load($type, array($entity));
+      $entity = reset($entity);
+    }
+    if (!$entity) {
+      return '';
+    }
 
     if ($this->options['display'] === 'view') {
       return entity_view($type, $entity, $this->options['view_mode']);

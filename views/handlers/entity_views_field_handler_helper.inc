@@ -95,21 +95,39 @@ class EntityFieldHandlerHelper {
 
   /**
    * Overridden to use a metadata wrapper (if necessary).
+   *
+   * Uses $values->_entity_properties to look for already extracted fields.
+   *
+   * @param $handler
+   *   The field handler for which to return a value.
+   * @param $values
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
+   * @param $field
+   *   The field to extract. If no value is given, the field of the given
+   *   handler is used instead. The special "entity object" value can be used to
+   *   get the base entity instead of a special field.
+   * @param $default
+   *   The value to return if the entity or field are not present.
    */
   public static function get_value($handler, $values, $field = NULL, $default = NULL) {
     $field = isset($field) ? $field : $handler->real_field;
-    if (isset($values->_entity_properties[$field])) {
-      return $values->_entity_properties[$field];
+    if (!isset($values->_entity_properties[$field])) {
+      if (!isset($handler->entities[$handler->view->row_index])) {
+        $values->_entity_properties[$field] = $default;
+      }
+      else {
+        $entity = $handler->entities[$handler->view->row_index];
+        if ($field === 'entity object') {
+          $values->_entity_properties[$field] = $entity;
+        }
+        else {
+          $wrapper = entity_metadata_wrapper($handler->entity_type, $entity);
+          $values->_entity_properties[$field] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+        }
+      }
     }
-    if (!isset($handler->entities[$handler->view->row_index])) {
-      return $default;
-    }
-    $entity = $handler->entities[$handler->view->row_index];
-    if ($field === 'entity object') {
-      return $entity;
-    }
-    $wrapper = entity_metadata_wrapper($handler->entity_type, $entity);
-    return isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+    return $values->_entity_properties[$field];
   }
 
   /**
@@ -118,8 +136,14 @@ class EntityFieldHandlerHelper {
    * Implements the entity link functionality and list handling. Basic handling
    * of the single values is delegated back to the field handler.
    *
+   * @param $handler
+   *   The field handler whose field should be rendered.
    * @param $values
-   *   The values retrieved from the database.
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
+   *
+   * @return
+   *   The rendered value for the field.
    */
   public static function render($handler, $values) {
     $value = $handler->get_value($values);
@@ -131,6 +155,17 @@ class EntityFieldHandlerHelper {
 
   /**
    * Render a list of values.
+   *
+   * @param $handler
+   *   The field handler whose field is rendered.
+   * @param $value
+   *   The list of values to render.
+   * @param $values
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
+   *
+   * @return
+   *   The rendered value for the given list.
    */
   public static function render_list($handler, $value, $values) {
     // Allow easy overriding of this behaviour in the specific field handler.
@@ -164,7 +199,18 @@ class EntityFieldHandlerHelper {
   }
 
   /**
-   * Render a value as a link to the entity, if applicable.
+   * Render a single value as a link to the entity, if applicable.
+   *
+   * @param $handler
+   *   The field handler whose field is rendered.
+   * @param $value
+   *   The single value to render.
+   * @param $values
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
+   *
+   * @return
+   *   The rendered value.
    */
   public static function render_entity_link($handler, $value, $values) {
     // Allow easy overriding of this behaviour in the specific field handler.
@@ -191,6 +237,17 @@ class EntityFieldHandlerHelper {
 
   /**
    * Render a single value.
+   *
+   * @param $handler
+   *   The field handler whose field is rendered.
+   * @param $value
+   *   The single value to render.
+   * @param $values
+   *   The values for the current row retrieved from the Views query, as an
+   *   object.
+   *
+   * @return
+   *   The rendered value.
    */
   public static function render_single_value($handler, $value, $values) {
     // Try to use the method in the specific field handler.
