@@ -1273,8 +1273,10 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
       foreach ($wrappers as $i => $wrapper) {
         if (isset($wrapper->$field)) {
           $id = $wrapper->$field->value($options);
-          $nested_entities[$id] = $id;
-          $wrapper_refs[$i] = $id;
+          if ($id !== FALSE) {
+            $nested_entities[$id] = $id;
+            $wrapper_refs[$i] = $id;
+          }
         }
       }
       // If we aren't extracting a nested value, we are done now.
@@ -1302,11 +1304,11 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
   }
   catch (EntityMetadataWrapperException $e) {
     $vars = array(
-      '!property' => $property,
-      '!type' => $type,
-      '!msg' => $e->getMessage(),
+      '@property' => $property,
+      '@type' => $type,
+      '@msg' => $e->getMessage(),
     );
-    watchdog('entity', 'An error occurred while extracting property !property from wrappers of type !type: !msg', $vars, WATCHDOG_WARNING);
+    watchdog('entity', nl2br(check_plain($e->getTraceAsString())), NULL);#'An error occurred while extracting property @property from wrappers of type @type: @msg', $vars, WATCHDOG_WARNING);
     return $ret;
   }
 }
