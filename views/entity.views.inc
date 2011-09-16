@@ -198,7 +198,7 @@ function _entity_views_field_identifier($field, array $table) {
  */
 function entity_views_plugins() {
   foreach (views_fetch_data() as $table => $data) {
-    if (!empty($data['table']['base']['entity type'])) {
+    if (!empty($data['table']['entity type'])) {
       $base_tables[] = $table;
     }
   }
@@ -256,8 +256,8 @@ class EntityDefaultViewsController {
         'title' => drupal_ucfirst($this->info['label']),
         // @todo: Support an entity info description key or such?
         'help' => '',
-        'entity type' => $this->type,
       );
+      $data[$table]['table']['entity type'] = $this->type;
       $data[$table] += $this->schema_fields();
 
       // Add in any reverse-relationships which have been determined.
