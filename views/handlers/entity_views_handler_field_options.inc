@@ -18,9 +18,14 @@ class entity_views_handler_field_options extends views_handler_field {
   public $entity_type;
 
   /**
-   * Stores all entites which are in the result.
+   * Stores all entities which are in the result.
    */
-  public $entities;
+  public $entities = array();
+
+  /**
+   * Stores the result entities' metadata wrappers.
+   */
+  public $wrappers = array();
 
   /**
    * The base field of the entity type assosiated with this field.

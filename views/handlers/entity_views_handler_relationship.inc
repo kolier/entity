@@ -15,7 +15,7 @@ class entity_views_handler_relationship extends views_handler_relationship {
   // @todo What the heck have we got to do here?
 
   public function query() {
-
+    $this->alias = $this->real_field;
   }
 
 }

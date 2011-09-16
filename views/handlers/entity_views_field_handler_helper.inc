@@ -62,6 +62,7 @@ class EntityFieldHandlerHelper {
   public static function query($handler) {
     // Some of the parent handlers might require this.
     $handler->field_alias = ltrim(substr($handler->real_field, strrpos($handler->real_field, ':')), ':');
+
     // Add the field if the query plugin implements an add_field() method, just
     // like the default query plugin.
     if (method_exists($handler->query, 'add_field')) {
@@ -69,15 +70,12 @@ class EntityFieldHandlerHelper {
       $handler->base_field = $handler->view->base_field;
 
       if (!empty($handler->relationship)) {
-        foreach ($handler->view->relationship as $relationship) {
-          if ($relationship->alias == $handler->relationship) {
-            $base_table = $relationship->definition['base'];
-            $handler->table_alias = $relationship->alias;
+        $relationship = $handler->view->relationship[$handler->relationship];
+        $base_table = $relationship->definition['base'];
+        $handler->table_alias = $relationship->alias;
 
-            $table_data = views_fetch_data($base_table);
-            $handler->base_field = $table_data['table']['base']['field'];
-          }
-        }
+        $table_data = views_fetch_data($base_table);
+        $handler->base_field = $table_data['table']['base']['field'];
       }
 
       $handler->query->add_field($handler->table_alias, $handler->base_field, '');
@@ -146,13 +144,15 @@ class EntityFieldHandlerHelper {
    * @see entity_metadata_extract_property()
    */
   public static function construct_property_selector($handler) {
-    if ($handler->relationship && !isset(self::$DEBUG1)) {
-      self::$DEBUG1 = TRUE;
-      dpm($handler->relationship);
-      dpm($handler->view->relationship);
-    }
-    // @todo Implement.
     $ret = '';
+    if ($handler->relationship) {
+      $h = $handler;
+      $view = $h->view;
+      while (!empty($h->relationship) && !empty($view->relationship[$h->relationship])) {
+        $h = $view->relationship[$h->relationship];
+        $ret = $h->real_field . ($ret ? ":$ret" : '');
+      }
+    }
 
     // If we have a selector as the real_field, append this to the returned
     // relationship selector.
