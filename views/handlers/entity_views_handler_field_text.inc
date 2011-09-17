@@ -30,7 +30,7 @@ class entity_views_handler_field_text extends views_handler_field {
   public $wrappers = array();
 
   /**
-   * The base field of the entity type assosiated with this field.
+   * The base name of the field, without property selector.
    */
   public $base_field;
 
@@ -39,6 +39,13 @@ class entity_views_handler_field_text extends views_handler_field {
    */
   public function query() {
     EntityFieldHandlerHelper::query($this);
+  }
+
+  /**
+   * Adds a click-sort to the query.
+   */
+  public function click_sort($order) {
+    EntityFieldHandlerHelper::click_sort($this, $order);
   }
 
   /**

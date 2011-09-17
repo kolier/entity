@@ -20,6 +20,13 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
   }
 
   /**
+   * Adds a click-sort to the query.
+   */
+  public function click_sort($order) {
+    EntityFieldHandlerHelper::click_sort($this, $order);
+  }
+
+  /**
    * Load the entities for all rows that are about to be displayed.
    */
   public function pre_render(&$values) {
@@ -138,7 +145,7 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
    */
   public function render_single_value($entity, $values) {
     $type = $this->definition['entity type'];
-    if (!is_object($entity) && isset($entity)) {
+    if (!is_object($entity) && isset($entity) && $entity !== FALSE) {
       $entity = entity_load_single($type, $entity);
     }
     if (!$entity) {

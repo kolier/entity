@@ -30,7 +30,7 @@ class entity_views_handler_field_date extends views_handler_field_date {
   public $wrappers = array();
 
   /**
-   * The base field of the entity type assosiated with this field.
+   * The base name of the field, without property selector.
    */
   public $base_field;
 
@@ -39,6 +39,13 @@ class entity_views_handler_field_date extends views_handler_field_date {
    */
   public function query() {
     EntityFieldHandlerHelper::query($this);
+  }
+
+  /**
+   * Adds a click-sort to the query.
+   */
+  public function click_sort($order) {
+    EntityFieldHandlerHelper::click_sort($this, $order);
   }
 
   /**
@@ -85,7 +92,7 @@ class entity_views_handler_field_date extends views_handler_field_date {
    * Render a single field value.
    */
   public function render_single_value($value, $values) {
-    $values->_entity_properties[$this->field_alias] = $value;
+    EntityFieldHandlerHelper::$cache[$this->field_alias] = $value;
     return parent::render($values);
   }
 

@@ -61,24 +61,22 @@ class EntityFieldHandlerHelper {
    */
   public static function query($handler) {
     // Some of the parent handlers might require this.
-    $handler->field_alias = ltrim(substr($handler->real_field, strrpos($handler->real_field, ':')), ':');
+    $handler->field_alias = $handler->real_field;
+    $handler->base_field = ltrim(substr($handler->real_field, strrpos($handler->real_field, ':')), ':');
+  }
 
-    // Add the field if the query plugin implements an add_field() method, just
-    // like the default query plugin.
-    if (method_exists($handler->query, 'add_field')) {
-      $handler->table_alias = $base_table = $handler->view->base_table;
-      $handler->base_field = $handler->view->base_field;
-
-      if (!empty($handler->relationship)) {
-        $relationship = $handler->view->relationship[$handler->relationship];
-        $base_table = $relationship->definition['base'];
-        $handler->table_alias = $relationship->alias;
-
-        $table_data = views_fetch_data($base_table);
-        $handler->base_field = $table_data['table']['base']['field'];
-      }
-
-      $handler->query->add_field($handler->table_alias, $handler->base_field, '');
+  /**
+   * Adds a click-sort to the query.
+   *
+   * @param $order
+   *   Either 'ASC' or 'DESC'.
+   */
+  public static function click_sort($handler, $order) {
+    // The normal orderby() method for this usually won't work here. So we need
+    // query plugins to provide their own method for this.
+    if (method_exists($handler->query, 'add_selector_orderby')) {
+      $selector = self::construct_property_selector($handler, TRUE);
+      $handler->query->add_selector_orderby($selector, $order);
     }
   }
 
@@ -137,13 +135,16 @@ class EntityFieldHandlerHelper {
    *
    * @param $handler
    *   The handler for which to construct the selector.
+   * @param $complete
+   *   If TRUE, the complete selector for the field is returned, not just the
+   *   one for its parent. Defaults to FALSE.
    *
    * @return
    *   An Entity API property selector for the given handler's relationship.
    *
    * @see entity_metadata_extract_property()
    */
-  public static function construct_property_selector($handler) {
+  public static function construct_property_selector($handler, $complete = FALSE) {
     $ret = '';
     if ($handler->relationship) {
       $h = $handler;
@@ -156,7 +157,10 @@ class EntityFieldHandlerHelper {
 
     // If we have a selector as the real_field, append this to the returned
     // relationship selector.
-    if ($pos = strrpos($handler->real_field, ':')) {
+    if ($complete) {
+      $ret .= ($ret ? ':' : '') . $handler->real_field;
+    }
+    elseif ($pos = strrpos($handler->real_field, ':')) {
       $ret .= ($ret ? ':' : '') . substr($handler->real_field, 0, $pos);
     }
 
@@ -181,9 +185,9 @@ class EntityFieldHandlerHelper {
    *   The value to return if the entity or field are not present.
    */
   public static function get_value($handler, $values, $field = NULL, $default = NULL) {
-    $field = isset($field) ? $field : $handler->field_alias;
-    $relationship = self::construct_property_selector($handler);
-    $selector = $relationship ? "$relationship:$field" : $field;
+    $field = isset($field) ? $field : $handler->base_field;
+    $selector = self::construct_property_selector($handler);
+    $selector = $selector ? "$selector:$field" : $field;
     if (!isset($values->_entity_properties[$selector])) {
       if (!isset($handler->wrappers[$handler->view->row_index])) {
         $values->_entity_properties[$selector] = $default;
