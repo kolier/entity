@@ -115,7 +115,6 @@ function entity_views_field_definition($field, array $property, array &$table, $
       $additional['relationship'] = array(
         'handler' => $field_handlers['relationship'],
         'base' => 'entity_' . $type,
-        'base field' => $key,
         'relationship field' => $field,
         'label' => $title,
       );
@@ -127,7 +126,7 @@ function entity_views_field_definition($field, array $property, array &$table, $
   }
   elseif (!empty($property['field'])) {
     $type = 'field';
-    $field_name = ltrim(substr($key, strrpos($key, ':')), ':');
+    $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
     $additional_field['field_name'] = $field_name;
     $additional_field['entity_tables'] = array();
     $additional_field['entity type'] = $table['table']['entity type'];
@@ -136,7 +135,7 @@ function entity_views_field_definition($field, array $property, array &$table, $
   // Copied from EntityMetadataWrapper::optionsList()
   elseif (isset($property['options list']) && is_callable($property['options list'])) {
     // If this is a nested property, we need to get rid of all prefixes first.
-    $field_name = ltrim(substr($key, strrpos($key, ':')), ':');
+    $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
     $options = call_user_func($property['options list'], $field_name, $property, 'view');
     if ($options) {
       $type = 'options';
@@ -163,7 +162,7 @@ function entity_views_field_definition($field, array $property, array &$table, $
   }
   if (!empty($property['property info'])) {
     foreach ($property['property info'] as $nested_key => $nested_property) {
-      entity_views_field_definition($key . ':' . $nested_key, $nested_property, $table, $title . ' » ');
+      entity_views_field_definition($field . ':' . $nested_key, $nested_property, $table, $title . ' » ');
     }
   }
 }
