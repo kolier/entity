@@ -35,6 +35,11 @@ class entity_views_handler_field_date extends views_handler_field_date {
   public $base_field;
 
   /**
+   * A value cache used in get_value() to make list fields work properly.
+   */
+  public $_cache = array();
+
+  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
   public function query() {
@@ -92,7 +97,6 @@ class entity_views_handler_field_date extends views_handler_field_date {
    * Render a single field value.
    */
   public function render_single_value($value, $values) {
-    EntityFieldHandlerHelper::$cache[$this->field_alias] = $value;
     return parent::render($values);
   }
 

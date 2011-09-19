@@ -33,6 +33,11 @@ class entity_views_handler_field_duration extends views_handler_field {
   public $base_field;
 
   /**
+   * A value cache used in get_value() to make list fields work properly.
+   */
+  public $_cache = array();
+
+  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
   public function query() {

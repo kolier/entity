@@ -37,7 +37,7 @@ class entity_views_handler_field_field extends views_handler_field_field {
   /**
    * Return TRUE if the user has access to view this field.
    */
-  function access() {
+  public function access() {
     return field_access('view', $this->field_info, $this->definition['entity type']);
   }
 
