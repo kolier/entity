@@ -84,7 +84,7 @@ class EntityFieldHandlerHelper {
    * Load the entities for all rows that are about to be displayed.
    *
    * Automatically takes care of relationships, either defined via Views or via
-   * Entity API property selectors.
+   * Entity API data selectors.
    */
   public static function pre_render($handler, &$values) {
     if (empty($values)) {
@@ -131,7 +131,7 @@ class EntityFieldHandlerHelper {
   }
 
   /**
-   * Return a Entity API property selector for the given handler's relationship.
+   * Return a Entity API data selector for the given handler's relationship.
    *
    * @param $handler
    *   The handler for which to construct the selector.
@@ -140,7 +140,7 @@ class EntityFieldHandlerHelper {
    *   one for its parent. Defaults to FALSE.
    *
    * @return
-   *   An Entity API property selector for the given handler's relationship.
+   *   An Entity API data selector for the given handler's relationship.
    *
    * @see entity_metadata_extract_property()
    */
@@ -238,7 +238,7 @@ class EntityFieldHandlerHelper {
    *
    * @param $handler
    *   The field handler whose field is rendered.
-   * @param $value
+   * @param $list
    *   The list of values to render.
    * @param $values
    *   The values for the current row retrieved from the Views query, as an
@@ -247,35 +247,35 @@ class EntityFieldHandlerHelper {
    * @return
    *   The rendered value for the given list.
    */
-  public static function render_list($handler, $value, $values) {
+  public static function render_list($handler, $list, $values) {
     // Allow easy overriding of this behaviour in the specific field handler.
     if (method_exists($handler, 'render_list')) {
-      return $handler->render_list($value, $values);
+      return $handler->render_list($list, $values);
     }
     if (isset($handler->options['list']['mode'])) {
       if ($handler->options['list']['mode'] == 'first') {
-        $value = count($value) ? array_shift($value) : NULL;
-        if (is_array($value)) {
-          return self::render_entity_link($handler, $value, $values);
+        $list = count($list) ? array_shift($list) : NULL;
+        if (is_array($list)) {
+          return self::render_entity_link($handler, $list, $values);
         }
-        elseif (isset($value)) {
-          return self::render_entity_link($handler, $value, $values);
+        elseif (isset($list)) {
+          return self::render_entity_link($handler, $list, $values);
         }
         return NULL;
       }
       if ($handler->options['list']['mode'] == 'count') {
-        return count($value);
+        return count($list);
       }
     }
-    $vs = array();
-    foreach ($value as $v) {
-      $v = is_array($v) ? self::render_list($handler, $v, $values) : self::render_entity_link($handler, $v, $values);
-      if ($v) {
-        $vs[] = $v;
+    $inner_values = array();
+    foreach ($list as $value) {
+      $value = is_array($value) ? self::render_list($handler, $value, $values) : self::render_entity_link($handler, $value, $values);
+      if ($value) {
+        $inner_values[] = $value;
       }
     }
     $glue = isset($handler->options['list']['glue']) ? $handler->options['list']['glue'] : ', ';
-    return implode($glue, $vs);
+    return implode($glue, $inner_values);
   }
 
   /**
@@ -303,13 +303,6 @@ class EntityFieldHandlerHelper {
     }
     $entity = $handler->get_value($values, 'entity object');
     if (is_object($entity) && ($url = entity_uri($handler->entity_type, $entity))) {
-      // We LOVE our core bugs! (http://drupal.org/node/1057242)
-      if ($handler->entity_type === 'file' && !is_array($url)) {
-        $url = array(
-          'path' => file_create_url($url),
-          'options' => array(),
-        );
-      }
       return l($render, $url['path'], array('html' => TRUE) + $url['options']);
     }
     return $render;

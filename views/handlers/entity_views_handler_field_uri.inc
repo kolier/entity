@@ -30,7 +30,7 @@ class entity_views_handler_field_uri extends views_handler_field_url {
   public $wrappers = array();
 
   /**
-   * The base name of the field, without property selector.
+   * The base name of the field, without data selector.
    */
   public $base_field;
 

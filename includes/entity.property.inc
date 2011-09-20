@@ -10,12 +10,12 @@
 /**
  * Get the entity property info array of an entity type.
  *
- * @see hook_entity_property_info()
- * @see hook_entity_property_info_alter()
- *
  * @param $entity_type
  *   The entity type, e.g. node, for which the info shall be returned, or NULL
  *   to return an array with info about all types.
+ *
+ * @see hook_entity_property_info()
+ * @see hook_entity_property_info_alter()
  */
 function entity_get_property_info($entity_type = NULL) {
   // Use the advanced drupal_static() pattern, since this is called very often.
@@ -44,10 +44,10 @@ function entity_get_property_info($entity_type = NULL) {
 /**
  * Returns the default information for an entity property.
  *
- * @see hook_entity_property_info()
- *
  * @return
  *   An array of optional property information keys mapped to their defaults.
+ *
+ * @see hook_entity_property_info()
  */
 function entity_property_info_defaults() {
   return array(

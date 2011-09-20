@@ -11,19 +11,19 @@
  * Only one of get_result_entities() and get_result_wrappers() needs to be
  * present, so results can be retrieved. The other methods are optional.
  */
-abstract class entity_views_axample_query extends views_plugin_query {
+abstract class entity_views_example_query extends views_plugin_query {
 
   /**
    * Add a sort to the query.
    *
-   * This is used to add a sort based on an Entity API property selector instead
+   * This is used to add a sort based on an Entity API data selector instead
    * of a field alias.
    *
    * This method has to be present if click-sorting on fields should be allowed
    * for some fields using the default Entity API field handlers.
    *
    * @param $selector
-   *   The field to sort on, as an Entity API property selector.
+   *   The field to sort on, as an Entity API data selector.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'. Defaults to 'ASC'.
    */

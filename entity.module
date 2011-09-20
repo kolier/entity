@@ -1148,15 +1148,15 @@ function entity_metadata_site_wrapper() {
 }
 
 /**
- * Extracts data from a metadata wrapper based on a property selector.
+ * Extracts data from a metadata wrapper based on a data selector.
  *
  * The data will be returned wrapped by one or more metadata wrappers.
  *
- * A property selector is a concatenation of properties which should be followed
+ * A data selector is a concatenation of properties which should be followed
  * to arrive at a desired property, that may be nested in related entities or
  * structures. The separate properties are herein concatenated with colons (:).
  *
- * For instance, a property selector of "author:roles" would mean to first
+ * For instance, a data selector of "author:roles" would mean to first
  * access the "author" property of the given wrapper, and then for this new
  * wrapper to access and return the "roles" property.
  *
@@ -1165,7 +1165,7 @@ function entity_metadata_site_wrapper() {
  *
  * @param EntityMetadataWrapper $wrapper
  *   The wrapper from which to extract data.
- * @param $property
+ * @param $selector
  *   The selector specifying the data to extract.
  * @param array $options
  *   An array of options that should be passed to the
@@ -1174,22 +1174,22 @@ function entity_metadata_site_wrapper() {
  * @return
  *   Either an (arbitrarily nested) array containing EntityMetadataWrapper
  *   objects for the given property, or one such wrapper, depending on whether
- *   the property selector contains any list-typed properties.
+ *   the data selector contains any list-typed properties.
  */
-function entity_metadata_extract_property(EntityMetadataWrapper $wrapper, $property, array $options = array()) {
-  $ret = entity_metadata_extract_property_multiple(array($wrapper), $property, $options);
+function entity_metadata_extract_property(EntityMetadataWrapper $wrapper, $selector, array $options = array()) {
+  $ret = entity_metadata_extract_property_multiple(array($wrapper), $selector, $options);
   return reset($ret);
 }
 
 /**
- * Extracts data from several metadata wrappers based on a property selector.
+ * Extracts data from several metadata wrappers based on a data selector.
  *
  * All metadata wrappers passed to this function have to be based on the exact
  * same property information.
  *
  * @param array $wrappers
  *   The EntityMetadataWrapper objects from which to extract data.
- * @param $property
+ * @param $selector
  *   The selector specifying the data to extract.
  * @param array $options
  *   An array of options that should be passed to the
@@ -1202,7 +1202,7 @@ function entity_metadata_extract_property(EntityMetadataWrapper $wrapper, $prope
  *
  * @see entity_metadata_extract_property()
  */
-function entity_metadata_extract_property_multiple(array $wrappers, $property, array $options = array()) {
+function entity_metadata_extract_property_multiple(array $wrappers, $selector, array $options = array()) {
   $options['identifier'] = TRUE;
   if (!$wrappers) {
     return array();
@@ -1214,9 +1214,9 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
   try {
     $type = reset($wrappers)->type();
     // List types create nested arrays.
-    if ($t = entity_property_list_extract_type($type)) {
+    if ($inner_type = entity_property_list_extract_type($type)) {
       // If these are entities, we should do a multiple load.
-      if (entity_get_info($t)) {
+      if (entity_get_info($inner_type)) {
         $nested_entities = array();
         $wrapper_refs = array();
         foreach ($wrappers as $i => $wrapper) {
@@ -1226,8 +1226,8 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
             $wrapper_refs[$i][] = $id;
           }
         }
-        $nested_entities = entity_load($t, $nested_entities);
-        $new_wrappers = entity_metadata_wrapper_multiple($t, $nested_entities);
+        $nested_entities = entity_load($inner_type, $nested_entities);
+        $new_wrappers = entity_metadata_wrapper_multiple($inner_type, $nested_entities);
       }
       else {
         $new_wrappers = array();
@@ -1243,7 +1243,7 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
         }
       }
       // Extract data from all contained list items.
-      $data = entity_metadata_extract_property_multiple($new_wrappers, $property, $options);
+      $data = entity_metadata_extract_property_multiple($new_wrappers, $selector, $options);
       $ret = array();
       // Now aggregate them as the return value for the given wrappers, defaulting
       // to empty arrays where no data was contained.
@@ -1257,17 +1257,17 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
       }
       return $ret;
     }
-    if (strpos($property, ':')) {
+    if (strpos($selector, ':')) {
       // We extract a property from a referenced entity or contained structure.
-      list($field, $nested) = explode(':', $property, 2);
+      list($field, $nested) = explode(':', $selector, 2);
     }
     else {
-      $field = $property;
+      $field = $selector;
     }
-    $t = reset($wrappers)->$field->type();
+    $nested_type = reset($wrappers)->$field->type();
     // As above: if we build entity-valued nested wrappers, we should do a
     // multiple load.
-    if (entity_get_info($t)) {
+    if (entity_get_info($nested_type)) {
       $nested_entities = array();
       $wrapper_refs = array();
       foreach ($wrappers as $i => $wrapper) {
@@ -1281,12 +1281,12 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
       }
       // If we aren't extracting a nested value, we are done now.
       if (!isset($nested)) {
-        return entity_metadata_wrapper_multiple($t, $wrapper_refs) + $ret;
+        return entity_metadata_wrapper_multiple($nested_type, $wrapper_refs) + $ret;
       }
-      $nested_entities = entity_load($t, $nested_entities);
+      $nested_entities = entity_load($nested_type, $nested_entities);
       foreach ($wrapper_refs as $i => $id) {
         if (isset($nested_entities[$id])) {
-          $new_wrappers[$i] = entity_metadata_wrapper($t, $nested_entities[$id]);
+          $new_wrappers[$i] = entity_metadata_wrapper($nested_type, $nested_entities[$id]);
         }
       }
     }
@@ -1304,11 +1304,11 @@ function entity_metadata_extract_property_multiple(array $wrappers, $property, a
   }
   catch (EntityMetadataWrapperException $e) {
     $vars = array(
-      '@property' => $property,
+      '@property' => $selector,
       '@type' => $type,
       '@msg' => $e->getMessage(),
     );
-    watchdog('entity', nl2br(check_plain($e->getTraceAsString())), NULL);#'An error occurred while extracting property @property from wrappers of type @type: @msg', $vars, WATCHDOG_WARNING);
+    watchdog('entity', 'An error occurred while extracting property @property from wrappers of type @type: @msg', $vars, WATCHDOG_WARNING);
     return $ret;
   }
 }

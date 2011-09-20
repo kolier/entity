@@ -28,7 +28,7 @@ class entity_views_handler_field_duration extends views_handler_field {
   public $wrappers = array();
 
   /**
-   * The base name of the field, without property selector.
+   * The base name of the field, without data selector.
    */
   public $base_field;
 

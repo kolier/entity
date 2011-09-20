@@ -12,7 +12,7 @@ function entity_views_data() {
   $data = array();
 
   foreach (entity_crud_get_info() as $type => $info) {
-    // Only enable the integration by default if we know the module providing
+    // Only enable the integration by default, it we know the module providing
     // the entity and it does not provide views integration yet.
     if (!isset($info['views controller class'])) {
       $info['views controller class'] = isset($info['module']) && !module_hook($info['module'], 'views_data') ? 'EntityDefaultViewsController' : FALSE;
@@ -71,14 +71,14 @@ function entity_views_table_definition($type) {
  * @param $field
  *   The key to be used for the property's field handler (and as the prefix for
  *   nested ones).
- * @param array $property
+ * @param array $property_info
  *   The property information for which to create a field definition.
  * @param array $table
  *   The table into which the definition should be inserted.
  * @param $title_prefix
  *   Internal use only.
  */
-function entity_views_field_definition($field, array $property, array &$table, $title_prefix = '') {
+function entity_views_field_definition($field, array $property_info, array &$table, $title_prefix = '') {
   $additional = array();
   $additional_field = array();
 
@@ -105,9 +105,9 @@ function entity_views_field_definition($field, array $property, array &$table, $
   );
   // @todo Some alter hook?
 
-  $property += entity_property_info_defaults();
-  $type = entity_property_list_inner_type($property['type']);
-  $title = $title_prefix . $property['label'];
+  $property_info += entity_property_info_defaults();
+  $type = entity_property_list_inner_type($property_info['type']);
+  $title = $title_prefix . $property_info['label'];
   if (entity_get_info($type)) {
     $additional_field['entity type'] = $type;
     // Others might have unset the relationship handler in the alter hook.
@@ -124,7 +124,7 @@ function entity_views_field_definition($field, array $property, array &$table, $
       $type = 'entity';
     }
   }
-  elseif (!empty($property['field'])) {
+  elseif (!empty($property_info['field'])) {
     $type = 'field';
     $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
     $additional_field['field_name'] = $field_name;
@@ -133,10 +133,10 @@ function entity_views_field_definition($field, array $property, array &$table, $
     $additional_field['is revision'] = FALSE;
   }
   // Copied from EntityMetadataWrapper::optionsList()
-  elseif (isset($property['options list']) && is_callable($property['options list'])) {
+  elseif (isset($property_info['options list']) && is_callable($property_info['options list'])) {
     // If this is a nested property, we need to get rid of all prefixes first.
     $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
-    $options = call_user_func($property['options list'], $field_name, $property, 'view');
+    $options = call_user_func($property_info['options list'], $field_name, $property_info, 'view');
     if ($options) {
       $type = 'options';
       $additional_field['options'] = $options;
@@ -150,18 +150,18 @@ function entity_views_field_definition($field, array $property, array &$table, $
     $table += array($key => array());
     $table[$key] += array(
       'title' => $title,
-      'help' => empty($property['description']) ? t('(No information available)') : $property['description'],
+      'help' => empty($property_info['description']) ? t('(No information available)') : $property_info['description'],
       'field' => array(),
     );
     $table[$key]['field'] += array(
       'handler' => $field_handlers[$type],
-      'type' => $property['type'],
+      'type' => $property_info['type'],
     );
     $table[$key] += $additional;
     $table[$key]['field'] += $additional_field;
   }
-  if (!empty($property['property info'])) {
-    foreach ($property['property info'] as $nested_key => $nested_property) {
+  if (!empty($property_info['property info'])) {
+    foreach ($property_info['property info'] as $nested_key => $nested_property) {
       entity_views_field_definition($field . ':' . $nested_key, $nested_property, $table, $title . ' » ');
     }
   }
