@@ -67,7 +67,7 @@ class entity_views_handler_field_field extends views_handler_field_field {
    */
   public function pre_render(&$values) {
     parent::pre_render($values);
-    EntityFieldHandlerHelper::pre_render($this, $values);
+    EntityFieldHandlerHelper::pre_render($this, $values, TRUE);
   }
 
   /**

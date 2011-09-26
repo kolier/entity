@@ -85,9 +85,23 @@ class EntityFieldHandlerHelper {
    * Automatically takes care of relationships, either defined via Views or via
    * Entity API data selectors.
    */
-  public static function pre_render($handler, &$values) {
+  public static function pre_render($handler, &$values, $load_always = FALSE) {
     if (empty($values)) {
       return;
+    }
+    if (!$load_always && empty($handler->options['link_to_entity'])) {
+      // Check whether we even need to load the entities.
+      $selector = self::construct_property_selector($handler, TRUE);
+      $load = FALSE;
+      foreach ($values as $row) {
+        if (empty($row->_entity_properties) || !array_key_exists($selector, $row->_entity_properties)) {
+          $load = TRUE;
+          break;
+        }
+      }
+      if (!$load) {
+        return;
+      }
     }
     if (method_exists($handler->query, 'get_result_wrappers')) {
       list($type, $wrappers) = $handler->query->get_result_wrappers($values, NULL);
@@ -192,7 +206,7 @@ class EntityFieldHandlerHelper {
     $field = isset($field) ? $field : $handler->base_field;
     $selector = self::construct_property_selector($handler);
     $selector = $selector ? "$selector:$field" : $field;
-    if (!isset($values->_entity_properties[$selector])) {
+    if (!array_key_exists($selector, $values->_entity_properties)) {
       if (!isset($handler->wrappers[$handler->view->row_index])) {
         $values->_entity_properties[$selector] = $default;
       }
