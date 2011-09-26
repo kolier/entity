@@ -103,7 +103,7 @@ class EntityFieldHandlerHelper {
 
     $relationship = self::construct_property_selector($handler);
     if ($relationship) {
-      $wrappers = entity_metadata_extract_property_multiple($wrappers, $relationship);
+      $wrappers = self::extract_property_multiple($wrappers, $relationship);
       unset($entities);
       $w = $wrappers;
       while (is_array($w)) {
@@ -142,7 +142,7 @@ class EntityFieldHandlerHelper {
    * @return
    *   An Entity API data selector for the given handler's relationship.
    *
-   * @see entity_metadata_extract_property()
+   * @see extract_property_multiple()
    */
   public static function construct_property_selector($handler, $complete = FALSE) {
     $ret = '';
@@ -332,6 +332,101 @@ class EntityFieldHandlerHelper {
     }
     // Lame fallback in case the field handler doesn't provide the method.
     return is_scalar($value) ? check_plain($value) : nl2br(check_plain(print_r($value, TRUE)));
+  }
+
+  /**
+   * Extracts data from several metadata wrappers based on a data selector.
+   *
+   * All metadata wrappers passed to this function have to be based on the exact
+   * same property information. The data will be returned wrapped by one or more
+   * metadata wrappers.
+   *
+   * A data selector is a concatenation of properties which should be followed
+   * to arrive at a desired property, that may be nested in related entities or
+   * structures. The separate properties are herein concatenated with colons (:).
+   *
+   * For instance, a data selector of "author:roles" would mean to first
+   * access the "author" property of the given wrapper, and then for this new
+   * wrapper to access and return the "roles" property.
+   *
+   * Lists of values in a property are automatically handled. They will result in
+   * nested arrays being returned.
+   *
+   * @param array $wrappers
+   *   The EntityMetadataWrapper objects from which to extract data.
+   * @param $selector
+   *   The selector specifying the data to extract.
+   * @param array $options
+   *   An array of options that should be passed to the
+   *   EntityMetadataWrapper::value() method (see there).
+   *
+   * @return array
+   *   The extracted property value(s) for each wrapper, keyed to the same key
+   *   that was used for the respecive wrapper in $wrappers. All extracted
+   *   properties are returned as metadata wrappers.
+   */
+  public static function extract_property_multiple(array $wrappers, $selector) {
+    $parts = explode(':', $selector, 2);
+    $name = $parts[0];
+
+    $results = array();
+    $entities = array();
+    foreach ($wrappers as $i => $wrapper) {
+      try {
+        $property = $wrapper->$name;
+        if ($property instanceof EntityDrupalWrapper) {
+          $id = $property->getIdentifier();
+          $entities[$property->type()][$id] = $i;
+        }
+        elseif ($property instanceof EntityStructureWrapper) {
+          $results[$i] = $property;
+        }
+        elseif ($property instanceof EntityListWrapper) {
+          foreach (EntityListWrapper as $item) {
+            $results[$i][] = $item;
+          }
+        }
+        // Do nothing in case it cannot be applied.
+      }
+      catch (EntityMetadataWrapperException $e) {
+        // Skip single empty properties.
+      }
+    }
+
+    if ($entities) {
+      // Map back the loaded entities back to the results array.
+      foreach ($entities as $type => $id_map) {
+        $entities[$type] = entity_load($type, array_keys($id_map));
+        foreach ($entities[$type] as $id => $entity) {
+          $results[$id_map[$id]] = entity_metadata_wrapper($type, $entity);
+        }
+      }
+    }
+
+    // We need to handle multiple values.
+    if (is_array(reset($results))) {
+      $all_wrappers = array();
+      $map = array();
+      $j = 0;
+      foreach ($results as $i => $item_wrappers) {
+        foreach ($item_wrappers as $i => $item_wrapper) {
+          $all_wrappers[$j] = $item_wrapper;
+          $map[$j] = $i;
+          $j++;
+        }
+      }
+      $result = self::extract_property_multiple($all_wrappers, $selector);
+      // Map the results back.
+      foreach ($result as $j => $result_wrapper) {
+        $results[$map[$j]][] = $result_wrapper;
+      }
+      return $results;
+    }
+
+    if (!empty($parts[1])) {
+      return self::extract_property_multiple($results, $parts[1]);
+    }
+    return $results;
   }
 
 }
