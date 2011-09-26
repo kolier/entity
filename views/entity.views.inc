@@ -6,14 +6,22 @@
  */
 
 /**
- * Implements hook_views_data()
+ * Implements hook_views_data().
+ *
+ * Provides Views integration for entities if they satisfy one of these
+ * conditions:
+ *  - hook_entity_info() specifies a 'views controller class' key.
+ *  - hook_entity_info() specifies a 'module' key, and the module does not
+ *    implement hook_views_data().
+ *
+ * @see entity_crud_hook_entity_info().
  */
 function entity_views_data() {
   $data = array();
 
   foreach (entity_crud_get_info() as $type => $info) {
-    // Only enable the integration by default, it we know the module providing
-    // the entity and it does not provide views integration yet.
+    // Provide default integration with the basic controller class if we know
+    // the module providing the entity and it does not provide views integration.
     if (!isset($info['views controller class'])) {
       $info['views controller class'] = isset($info['module']) && !module_hook($info['module'], 'views_data') ? 'EntityDefaultViewsController' : FALSE;
     }
@@ -249,6 +257,7 @@ class EntityDefaultViewsController {
       // Define the base group of this table. Fields that don't
       // have a group defined will go into this field by default.
       $data[$table]['table']['group']  = drupal_ucfirst($this->info['label']);
+      $data[$table]['table']['entity type'] = $this->type;
 
       $data[$table]['table']['base'] = array(
         'field' => $this->info['entity keys']['id'],
@@ -310,7 +319,7 @@ class EntityDefaultViewsController {
       $label_lowercase = drupal_strtolower($this->info['label'][0]) . drupal_substr($this->info['label'], 1);
       $property_label_lowercase = drupal_strtolower($property_info['label'][0]) . drupal_substr($property_info['label'], 1);
 
-      $this->relationships[$info['base table']][$this->info['base table']] = array(
+      $this->relationships[$info['base table']][$this->info['base table'] . '_' . $views_field_name] = array(
         'title' => $this->info['label'],
         'help' => t("Associated @label via the @label's @property.", array('@label' => $label_lowercase, '@property' => $property_label_lowercase)),
         'relationship' => array(
