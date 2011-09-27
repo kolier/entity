@@ -269,7 +269,7 @@ class EntityFieldHandlerHelper {
       if ($handler->options['list']['mode'] == 'first') {
         $list = count($list) ? array_shift($list) : NULL;
         if (is_array($list)) {
-          return self::render_entity_link($handler, $list, $values);
+          return self::render_list($handler, $list, $values);
         }
         elseif (isset($list)) {
           return self::render_entity_link($handler, $list, $values);
