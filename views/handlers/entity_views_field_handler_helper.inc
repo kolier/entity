@@ -121,13 +121,15 @@ class EntityFieldHandlerHelper {
     if ($relationship) {
       $wrappers = self::extract_property_multiple($wrappers, $relationship);
       unset($entities);
-      $w = $wrappers;
-      while (is_array($w)) {
-        $w = array_filter($w);
-        $w = reset($w);
+      // Get the first contained wrapper (which might be somewhere down in a
+      // nested array structure) to determine the type.
+      $wrapper = $wrappers;
+      while (is_array($wrapper)) {
+        $wrapper = array_filter($wrapper);
+        $wrapper = reset($wrapper);
       }
-      if ($w) {
-        $type = $w->type();
+      if ($wrapper) {
+        $type = $wrapper->type();
       }
     }
     $wrappers = array_filter($wrappers);
@@ -163,20 +165,20 @@ class EntityFieldHandlerHelper {
   public static function construct_property_selector($handler, $complete = FALSE) {
     $ret = '';
     if ($handler->relationship) {
-      $h = $handler;
-      $view = $h->view;
-      while (!empty($h->relationship) && !empty($view->relationship[$h->relationship])) {
-        $h = $view->relationship[$h->relationship];
-        $ret = $h->real_field . ($ret ? ":$ret" : '');
+      $curr_handler = $handler;
+      $view = $curr_handler->view;
+      while (!empty($curr_handler->relationship) && !empty($view->relationship[$curr_handler->relationship])) {
+        $curr_handler = $view->relationship[$curr_handler->relationship];
+        $ret = $curr_handler->real_field . ($ret ? ":$ret" : '');
       }
     }
 
-    // If we have a selector as the real_field, append this to the returned
-    // relationship selector.
     if ($complete) {
       $ret .= ($ret ? ':' : '') . $handler->real_field;
     }
     elseif ($pos = strrpos($handler->real_field, ':')) {
+      // If we have a selector as the real_field, append this to the returned
+      // relationship selector.
       $ret .= ($ret ? ':' : '') . substr($handler->real_field, 0, $pos);
     }
 
