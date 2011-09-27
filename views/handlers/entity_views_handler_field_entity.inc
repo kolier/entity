@@ -117,7 +117,7 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
    */
   public function render_entity_link($entity, $values) {
     $type = $this->definition['entity type'];
-    if (!is_object($entity) && isset($entity)) {
+    if (!is_object($entity) && isset($entity) && $entity !== FALSE) {
       $entity = entity_load_single($type, $entity);
     }
     if (!$entity) {
