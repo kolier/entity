@@ -108,7 +108,10 @@ class EntityFieldHandlerHelper {
     }
     elseif (method_exists($handler->query, 'get_result_entities')) {
       list($type, $entities) = $handler->query->get_result_entities($values, NULL);
-      $wrappers = entity_metadata_wrapper_multiple($type, $entities);
+      $wrappers = array();
+      foreach ($entities as $id => $entity) {
+        $wrappers[$id] = entity_metadata_wrapper($type, $entity);
+      }
     }
     else {
       return;
