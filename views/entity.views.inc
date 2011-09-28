@@ -262,8 +262,7 @@ class EntityDefaultViewsController {
       $data[$table]['table']['base'] = array(
         'field' => $this->info['entity keys']['id'],
         'title' => drupal_ucfirst($this->info['label']),
-        // @todo: Support an entity info description key or such?
-        'help' => '',
+        'help' => isset($this->info['description']) ? $this->info['description'] : '',
       );
       $data[$table]['table']['entity type'] = $this->type;
       $data[$table] += $this->schema_fields();
