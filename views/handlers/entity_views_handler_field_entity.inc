@@ -153,7 +153,8 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
     }
 
     if ($this->options['display'] === 'view') {
-      return entity_view($type, $entity, $this->options['view_mode']);
+      $entity_view = entity_view($type, array($entity), $this->options['view_mode']);
+      return render($entity_view);
     }
 
     if ($this->options['display'] == 'label') {
