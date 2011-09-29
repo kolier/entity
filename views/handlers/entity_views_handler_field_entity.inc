@@ -128,13 +128,6 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
       return $render;
     }
     if (is_object($entity) && ($url = entity_uri($type, $entity))) {
-      // We LOVE our core bugs! (http://drupal.org/node/1057242)
-      if ($type === 'file' && !is_array($url)) {
-        $url = array(
-          'path' => file_create_url($url),
-          'options' => array(),
-        );
-      }
       return l($render, $url['path'], array('html' => TRUE) + $url['options']);
     }
     return $render;
