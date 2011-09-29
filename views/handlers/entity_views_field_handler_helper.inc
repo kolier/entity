@@ -394,7 +394,7 @@ class EntityFieldHandlerHelper {
         $property = $wrapper->$name;
         if ($property instanceof EntityDrupalWrapper) {
           $id = $property->getIdentifier();
-          $entities[$property->type()][$id] = $i;
+          $entities[$property->type()][$i] = $id;
         }
         elseif ($property instanceof EntityStructureWrapper) {
           $results[$i] = $property;
@@ -414,9 +414,11 @@ class EntityFieldHandlerHelper {
     if ($entities) {
       // Map back the loaded entities back to the results array.
       foreach ($entities as $type => $id_map) {
-        $entities[$type] = entity_load($type, array_keys($id_map));
-        foreach ($entities[$type] as $id => $entity) {
-          $results[$id_map[$id]] = entity_metadata_wrapper($type, $entity);
+        $loaded = entity_load($type, $id_map);
+        foreach ($id_map as $i => $id) {
+          if (isset($loaded[$id])) {
+            $results[$i] = entity_metadata_wrapper($type, $loaded[$id]);
+          }
         }
       }
     }
