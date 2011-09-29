@@ -14,7 +14,8 @@
  *  - hook_entity_info() specifies a 'module' key, and the module does not
  *    implement hook_views_data().
  *
- * @see entity_crud_hook_entity_info().
+ * @see entity_crud_hook_entity_info()
+ * @see entity_views_table_definition()
  */
 function entity_views_data() {
   $data = array();
@@ -55,6 +56,8 @@ function entity_views_data() {
  *
  * @return
  *   An array containing a generic Views table definition for the entity type.
+ *
+ * @see entity_views_field_definition()
  */
 function entity_views_table_definition($type) {
   $tables = &drupal_static(__FUNCTION__, array());
@@ -74,7 +77,7 @@ function entity_views_table_definition($type) {
 }
 
 /**
- * Helper function for creating a Views field definition.
+ * Helper function for adding a Views field definition.
  *
  * @param $field
  *   The key to be used for the property's field handler (and as the prefix for
@@ -85,6 +88,8 @@ function entity_views_table_definition($type) {
  *   The table into which the definition should be inserted.
  * @param $title_prefix
  *   Internal use only.
+ *
+ * @see entity_views_table_definition()
  */
 function entity_views_field_definition($field, array $property_info, array &$table, $title_prefix = '') {
   $additional = array();
@@ -96,22 +101,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
     $additional['real field'] = $field;
   }
 
-  // Field handlers for the entity tables, by type.
-  $field_handlers = array(
-    'text'         => 'entity_views_handler_field_text',
-    'token'        => 'entity_views_handler_field_text',
-    'integer'      => 'entity_views_handler_field_numeric',
-    'decimal'      => 'entity_views_handler_field_numeric',
-    'date'         => 'entity_views_handler_field_date',
-    'duration'     => 'entity_views_handler_field_duration',
-    'boolean'      => 'entity_views_handler_field_boolean',
-    'uri'          => 'entity_views_handler_field_uri',
-    'options'      => 'entity_views_handler_field_options',
-    'field'        => 'entity_views_handler_field_field',
-    'entity'       => 'entity_views_handler_field_entity',
-    'relationship' => 'entity_views_handler_relationship',
-  );
-  // @todo Some alter hook?
+  $field_handlers = entity_views_get_field_handlers();
 
   $property_info += entity_property_info_defaults();
   $type = entity_property_list_inner_type($property_info['type']);
@@ -173,6 +163,35 @@ function entity_views_field_definition($field, array $property_info, array &$tab
       entity_views_field_definition($field . ':' . $nested_key, $nested_property, $table, $title . ' » ');
     }
   }
+}
+
+/**
+ * @return array
+ *   The handlers to use for the entity tables.
+ *
+ * @see hook_entity_views_get_field_handlers_alter()
+ */
+function entity_views_get_field_handlers() {
+  $field_handlers = drupal_static(__FUNCTION__);
+  if (!isset($field_handlers)) {
+    // Field handlers for the entity tables, by type.
+    $field_handlers = array(
+      'text'         => 'entity_views_handler_field_text',
+      'token'        => 'entity_views_handler_field_text',
+      'integer'      => 'entity_views_handler_field_numeric',
+      'decimal'      => 'entity_views_handler_field_numeric',
+      'date'         => 'entity_views_handler_field_date',
+      'duration'     => 'entity_views_handler_field_duration',
+      'boolean'      => 'entity_views_handler_field_boolean',
+      'uri'          => 'entity_views_handler_field_uri',
+      'options'      => 'entity_views_handler_field_options',
+      'field'        => 'entity_views_handler_field_field',
+      'entity'       => 'entity_views_handler_field_entity',
+      'relationship' => 'entity_views_handler_relationship',
+    );
+    drupal_alter('entity_views_get_field_handlers', $field_handlers);
+  }
+  return $field_handlers;
 }
 
 /**
