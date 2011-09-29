@@ -20,11 +20,6 @@ class entity_views_handler_field_field extends views_handler_field_field {
   public $entity_type;
 
   /**
-   * Stores all entities which are in the result.
-   */
-  public $entities = array();
-
-  /**
    * Stores the result entities' metadata wrappers.
    */
   public $wrappers = array();
@@ -90,10 +85,10 @@ class entity_views_handler_field_field extends views_handler_field_field {
    * Overridden to get the entity and put it where it is assumed to be.
    */
   public function get_value($values, $field = NULL) {
-    if (!isset($this->entities[$this->view->row_index])) {
+    $entity = EntityFieldHandlerHelper::get_value($this, $values, 'entity object');
+    if (!$entity) {
       return NULL;
     }
-    $entity = $this->entities[$this->view->row_index];
     if (empty($values->_field_data[$this->field_alias]['entity'])) {
       $values->_field_data[$this->field_alias]['entity'] = $entity;
       $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;

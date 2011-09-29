@@ -192,7 +192,7 @@ function entity_views_get_field_handlers() {
 }
 
 /**
- * Helper function for creating valid Views field identifiers out of property accessors.
+ * Helper function for creating valid Views field identifiers out of data selectors.
  *
  * @return string
  *   A valid Views field identifier that isn't yet used as a key in $table.

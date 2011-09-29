@@ -18,11 +18,6 @@ class entity_views_handler_field_duration extends views_handler_field {
   public $entity_type;
 
   /**
-   * Stores all entities which are in the result.
-   */
-  public $entities = array();
-
-  /**
    * Stores the result entities' metadata wrappers.
    */
   public $wrappers = array();

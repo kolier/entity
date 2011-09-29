@@ -148,21 +148,11 @@ class EntityFieldHandlerHelper {
     $wrappers = array_filter($wrappers);
 
     $handler->entity_type = $type;
-    $handler->entities = array();
     $handler->wrappers = $wrappers;
-    if (isset($entities)) {
-      $handler->entities = array_filter($entities);
-    }
-    elseif (entity_get_info($type)) {
-      // We can just load the entities from the wrappers.
-      foreach ($wrappers as $id => $wrapper) {
-        $handler->entities[$id] = $wrapper->value();
-      }
-    }
   }
 
   /**
-   * Return a Entity API data selector for the given handler's relationship.
+   * Return an Entity API data selector for the given handler's relationship.
    *
    * @param $handler
    *   The handler for which to construct the selector.
@@ -176,32 +166,32 @@ class EntityFieldHandlerHelper {
    * @see extract_property_multiple()
    */
   public static function construct_property_selector($handler, $complete = FALSE) {
-    $ret = '';
+    $return = '';
     if ($handler->relationship) {
-      $curr_handler = $handler;
-      $view = $curr_handler->view;
-      while (!empty($curr_handler->relationship) && !empty($view->relationship[$curr_handler->relationship])) {
-        $curr_handler = $view->relationship[$curr_handler->relationship];
-        $ret = $curr_handler->real_field . ($ret ? ":$ret" : '');
+      $current_handler = $handler;
+      $view = $current_handler->view;
+      while (!empty($current_handler->relationship) && !empty($view->relationship[$current_handler->relationship])) {
+        $current_handler = $view->relationship[$current_handler->relationship];
+        $return = $current_handler->real_field . ($return ? ":$return" : '');
       }
     }
 
     if ($complete) {
-      $ret .= ($ret ? ':' : '') . $handler->real_field;
+      $return .= ($return ? ':' : '') . $handler->real_field;
     }
     elseif ($pos = strrpos($handler->real_field, ':')) {
       // If we have a selector as the real_field, append this to the returned
       // relationship selector.
-      $ret .= ($ret ? ':' : '') . substr($handler->real_field, 0, $pos);
+      $return .= ($return ? ':' : '') . substr($handler->real_field, 0, $pos);
     }
 
-    return $ret;
+    return $return;
   }
 
   /**
-   * Overridden to use a metadata wrapper (if necessary).
+   * Get the value of a certain data selector.
    *
-   * Uses $values->_entity_properties to look for already extracted fields.
+   * Uses $values->_entity_properties to look for already extracted properties.
    *
    * @param $handler
    *   The field handler for which to return a value.
@@ -234,7 +224,12 @@ class EntityFieldHandlerHelper {
           $values->_entity_properties[$selector] = $wrapper->value();
         }
         else {
-          $values->_entity_properties[$selector] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+          try {
+            $values->_entity_properties[$selector] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+          }
+          catch (EntityMetadataWrapperException $e) {
+            $values->_entity_properties[$selector] = $default;
+          }
         }
       }
     }
@@ -310,7 +305,7 @@ class EntityFieldHandlerHelper {
   }
 
   /**
-   * Render a single value as a link to the entity, if applicable.
+   * Render a single value as a link to the entity if applicable.
    *
    * @param $handler
    *   The field handler whose field is rendered.
@@ -357,11 +352,11 @@ class EntityFieldHandlerHelper {
     // Try to use the method in the specific field handler.
     if (method_exists($handler, 'render_single_value')) {
       $handler->_cache[NULL] = $value;
-      $ret = $handler->render_single_value($value, $values);
+      $return = $handler->render_single_value($value, $values);
       unset($handler->_cache[NULL]);
-      return $ret;
+      return $return;
     }
-    // Lame fallback in case the field handler doesn't provide the method.
+    // Default fallback in case the field handler doesn't provide the method.
     return is_scalar($value) ? check_plain($value) : nl2br(check_plain(print_r($value, TRUE)));
   }
 
@@ -406,6 +401,8 @@ class EntityFieldHandlerHelper {
       try {
         $property = $wrapper->$name;
         if ($property instanceof EntityDrupalWrapper) {
+          // Remember the entity IDs to later load all at once (so as to
+          // properly utilize multiple load functionality).
           $id = $property->getIdentifier();
           $entities[$property->type()][$i] = $id;
         }
