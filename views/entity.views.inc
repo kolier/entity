@@ -200,8 +200,8 @@ function entity_views_get_field_handlers() {
 function _entity_views_field_identifier($field, array $table) {
   $aliases = &drupal_static(__FUNCTION__, array());
   // If we re-use aliases (tables might be different), we have to make sure we
-  // never return the same alias for two different fields (even this is highly
-  // unlikely).
+  // never return the same alias for two different fields (even though this is
+  // highly unlikely anyways).
   $used = array_flip($aliases);
 
   if (!isset($aliases[$field])) {
