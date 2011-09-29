@@ -38,6 +38,11 @@ class entity_views_handler_field_options extends views_handler_field {
   public $_cache = array();
 
   /**
+   * The key / name mapping for the options.
+   */
+  public $option_list;
+
+  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
   public function query() {
@@ -92,7 +97,6 @@ class entity_views_handler_field_options extends views_handler_field {
     );
   }
 
-
   public function render($values) {
     return EntityFieldHandlerHelper::render($this, $values);
   }
@@ -101,8 +105,15 @@ class entity_views_handler_field_options extends views_handler_field {
    * Render a single field value.
    */
   public function render_single_value($value, $values) {
-    if ($this->options['format_name'] && isset($this->definition['options'][$value])) {
-      $value = $this->definition['options'][$value];
+    if (!isset($this->option_list)) {
+      $this->option_list = array();
+      $callback = $this->definition['options callback'];
+      if (is_callable($callback['function'])) {
+        $this->option_list = call_user_func($callback['function'], $this->base_field, $callback['info'], 'view');
+      }
+    }
+    if ($this->options['format_name'] && isset($this->option_list[$value])) {
+      $value = $this->option_list[$value];
     }
 
     return $this->sanitize_value($value);

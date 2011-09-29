@@ -61,7 +61,20 @@ class EntityFieldHandlerHelper {
   public static function query($handler) {
     // Some of the parent handlers might require this.
     $handler->field_alias = $handler->real_field;
-    $handler->base_field = ltrim(substr($handler->real_field, strrpos($handler->real_field, ':')), ':');
+    $handler->base_field = self::get_selector_field_name($handler->real_field);
+  }
+
+  /**
+   * Extracts the innermost field name from a data selector.
+   *
+   * @param $selector
+   *   The data selector.
+   *
+   * @return
+   *   The last component of the data selector.
+   */
+  public static function get_selector_field_name($selector) {
+    return ltrim(substr($selector, strrpos($selector, ':')), ':');
   }
 
   /**

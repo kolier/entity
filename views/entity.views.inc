@@ -100,6 +100,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   if ($key != $field) {
     $additional['real field'] = $field;
   }
+  $field_name = EntityFieldHandlerHelper::get_selector_field_name($field);
 
   $field_handlers = entity_views_get_field_handlers();
 
@@ -108,15 +109,12 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   $title = $title_prefix . $property_info['label'];
   if (entity_get_info($type)) {
     $additional_field['entity type'] = $type;
-    // Others might have unset the relationship handler in the alter hook.
-    if (isset($field_handlers['relationship'])) {
-      $additional['relationship'] = array(
-        'handler' => $field_handlers['relationship'],
-        'base' => 'entity_' . $type,
-        'relationship field' => $field,
-        'label' => $title,
-      );
-    }
+    $additional['relationship'] = array(
+      'handler' => $field_handlers['relationship'],
+      'base' => 'entity_' . $type,
+      'relationship field' => $field,
+      'label' => $title,
+    );
     // They could also add handlers for specific entity types.
     if (!isset($field_handlers[$type])) {
       $type = 'entity';
@@ -124,7 +122,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   }
   elseif (!empty($property_info['field'])) {
     $type = 'field';
-    $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
+    // Views' Field API field handler needs some extra definitions to work.
     $additional_field['field_name'] = $field_name;
     $additional_field['entity_tables'] = array();
     $additional_field['entity type'] = $table['table']['entity type'];
@@ -133,12 +131,11 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   // Copied from EntityMetadataWrapper::optionsList()
   elseif (isset($property_info['options list']) && is_callable($property_info['options list'])) {
     // If this is a nested property, we need to get rid of all prefixes first.
-    $field_name = ltrim(substr($field, strrpos($field, ':')), ':');
-    $options = call_user_func($property_info['options list'], $field_name, $property_info, 'view');
-    if ($options) {
-      $type = 'options';
-      $additional_field['options'] = $options;
-    }
+    $type = 'options';
+    $additional_field['options callback'] = array(
+      'function' => $property_info['options list'],
+      'info' => $property_info,
+    );
   }
   elseif ($type == 'decimal') {
     $additional_field['float'] = TRUE;
