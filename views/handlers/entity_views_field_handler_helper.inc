@@ -18,7 +18,7 @@ class EntityFieldHandlerHelper {
   public static function option_definition($handler) {
     if (entity_property_list_extract_type($handler->definition['type'])) {
       $options['list']['contains']['mode'] = array('default' => 'collapse');
-      $options['list']['contains']['glue'] = array('default' => ', ');
+      $options['list']['contains']['separator'] = array('default' => ', ');
     }
     $options['link_to_entity'] = array('default' => FALSE);
 
@@ -40,10 +40,10 @@ class EntityFieldHandlerHelper {
         ),
         '#default_value' => $handler->options['list']['mode'],
       );
-      $form['list']['glue'] = array(
+      $form['list']['separator'] = array(
         '#type' => 'textfield',
         '#title' => t('List seperator'),
-        '#default_value' => $handler->options['list']['glue'],
+        '#default_value' => $handler->options['list']['separator'],
         '#dependency' => array('edit-options-list-mode' => array('collapse')),
       );
     }
@@ -312,8 +312,8 @@ class EntityFieldHandlerHelper {
         $inner_values[] = $value;
       }
     }
-    $glue = isset($handler->options['list']['glue']) ? $handler->options['list']['glue'] : ', ';
-    return implode($glue, $inner_values);
+    $separator = isset($handler->options['list']['separator']) ? $handler->options['list']['separator'] : ', ';
+    return implode($separator, $inner_values);
   }
 
   /**
