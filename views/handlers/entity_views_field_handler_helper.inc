@@ -207,9 +207,10 @@ class EntityFieldHandlerHelper {
    */
   public static function get_value($handler, $values, $field = NULL, $default = NULL) {
     // There is a value cache on each handler so parent handlers rendering a
-    // single field value from a list will get the right data.
-    if (isset($handler->_cache[$field])) {
-      return $handler->_cache[$field];
+    // single field value from a list will get the single value, not the whole
+    // list.
+    if (!isset($field) && isset($handler->current_value)) {
+      return $handler->current_value;
     }
     $field = isset($field) ? $field : $handler->base_field;
     $selector = self::construct_property_selector($handler);
@@ -351,9 +352,9 @@ class EntityFieldHandlerHelper {
   public static function render_single_value($handler, $value, $values) {
     // Try to use the method in the specific field handler.
     if (method_exists($handler, 'render_single_value')) {
-      $handler->_cache[NULL] = $value;
+      $handler->current_value = $value;
       $return = $handler->render_single_value($value, $values);
-      unset($handler->_cache[NULL]);
+      unset($handler->current_value);
       return $return;
     }
     // Default fallback in case the field handler doesn't provide the method.

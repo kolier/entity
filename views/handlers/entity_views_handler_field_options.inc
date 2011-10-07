@@ -28,9 +28,9 @@ class entity_views_handler_field_options extends views_handler_field {
   public $base_field;
 
   /**
-   * A value cache used in get_value() to make list fields work properly.
+   * Stores the current value when rendering list fields.
    */
-  public $_cache = array();
+  public $current_value;
 
   /**
    * The key / name mapping for the options.
