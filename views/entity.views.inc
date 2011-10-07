@@ -222,22 +222,20 @@ function entity_views_get_field_handlers() {
  *   A valid Views field identifier that isn't yet used as a key in $table.
  */
 function _entity_views_field_identifier($field, array $table) {
-  $aliases = &drupal_static(__FUNCTION__, array());
-  // If we re-use aliases (tables might be different), we have to make sure we
-  // never return the same alias for two different fields (even though this is
-  // highly unlikely anyways).
-  $used = array_flip($aliases);
-
-  if (!isset($aliases[$field])) {
-    $key = $base = preg_replace('/[^a-zA-Z0-9]+/S', '_', $field);
-    $i = 0;
-    while (isset($table[$key]) || (isset($used[$key]) && $used[$key] !== $field)) {
-      $key = $base . '_' . ++$i;
-    }
-    $aliases[$field] = $key;
+  $key = $base = preg_replace('/[^a-zA-Z0-9]+/S', '_', $field);
+  $i = 0;
+  // The condition checks whether this sanitized field identifier is already
+  // used for another field in this table (and whether the identifier is
+  // "table", which can never be used).
+  // If $table[$key] is set, the identifier is already used, but this might be
+  // already for the same field. To test that, we need the original field name,
+  // which is either $table[$key]['real field'], if set, or $key. If this
+  // original field name is equal to $field, we can use that key. Otherwise, we
+  // append numeric suffixes until we reach an unused key.
+  while ($key == 'table' || (isset($table[$key]) && (isset($table[$key]['real field']) ? $table[$key]['real field'] : $key) != $field)) {
+    $key = $base . '_' . ++$i;
   }
-
-  return $aliases[$field];
+  return $key;
 }
 
 /**
