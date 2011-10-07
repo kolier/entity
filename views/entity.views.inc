@@ -51,6 +51,28 @@ function entity_views_data() {
 /**
  * Helper function for getting the entity Views table definition for a type.
  *
+ * This creates extra tables for each entity type that aren't associated with a
+ * query plugin (and thus aren't base tables) and just rely on the entities to
+ * retrieve the displayed data. To obtain the entities corresponding to a
+ * certain result set, the field handlers defined on the table use a generic
+ * interface defined for query plugins that are based on entity handling, and
+ * which is described in the entity_views_example_query class.
+ *
+ * Other modules providing Views integration with new query plugins that are
+ * based on entities can then use these tables as a base for their own tables
+ * (by directly using this method and modifying the returned table) and/or by
+ * specifying relationships to them. The tables returned here already specify
+ * relationships to each other wherever an entity contains a reference to
+ * another (e.g., the node author constructs a relationship from nodes to
+ * users).
+ *
+ * As filtering and other query manipulation is potentially more plugin-specific
+ * than the display, only field handlers and relationships are provided with
+ * these tables. By providing a add_selector_orderby() method, the query plugin
+ * can, however, support click-sorting for the field handlers in these tables.
+ *
+ * For a detailed discussion see http://drupal.org/node/1266036
+ *
  * @param $type
  *   The entity type whose table definition should be return.
  *
@@ -60,6 +82,8 @@ function entity_views_data() {
  * @see entity_views_field_definition()
  */
 function entity_views_table_definition($type) {
+  // As other modules might want to copy these tables as a base for their own
+  // Views integration, we statically cache the tables to save some time.
   $tables = &drupal_static(__FUNCTION__, array());
 
   if (!isset($tables[$type])) {

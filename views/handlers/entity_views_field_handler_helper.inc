@@ -154,6 +154,17 @@ class EntityFieldHandlerHelper {
   /**
    * Return an Entity API data selector for the given handler's relationship.
    *
+   * E.g., a selector for the name of the tags associated with a node would look
+   * like this:
+   *
+   *   field_tags:name
+   *
+   * Lists are handled automatically. In the above example, if field_tags is a
+   * multi-valued field of taxonomy term references (type "list<taxonomy_term")
+   * then the value extracted for this selector from a single entity would be an
+   * array of all term names (which might also be empty, or contain only one
+   * entry).
+   *
    * @param $handler
    *   The handler for which to construct the selector.
    * @param $complete
