@@ -30,6 +30,11 @@ class entity_views_handler_field_field extends views_handler_field_field {
   public $base_field;
 
   /**
+   * The entity for which this field is currently rendered.
+   */
+  public $entity;
+
+  /**
    * Return TRUE if the user has access to view this field.
    */
   public function access() {
@@ -69,32 +74,36 @@ class entity_views_handler_field_field extends views_handler_field_field {
    * Overridden to get the items our way.
    */
   public function get_items($values) {
-    // Only try to render the field if it is even present on this bundle.
-    // Otherwise, field_view_field() will trigger a fatal.
-    // The $this->get_value() call is actually necessary in any case, to fill
-    // some $values keys required by set_items().
-    $entity = $this->get_value($values, 'entity');
-    list (, , $bundle) = entity_extract_ids($this->entity_type, $entity);
-    if (field_info_instance($this->entity_type, $this->definition['field_name'], $bundle)) {
-      return $this->set_items($values, $this->view->row_index);
+    $items = array();
+    // Set the entity type for the parent handler.
+    $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;
+    // We need special handling for lists of entities as the base.
+    $entities = EntityFieldHandlerHelper::get_value($this, $values, 'entity object');
+    if (!is_array($entities)) {
+      $entities = array($entities);
     }
-    return array();
+    foreach ($entities as $entity) {
+      // Only try to render the field if it is even present on this bundle.
+      // Otherwise, field_view_field() will trigger a fatal.
+      list (, , $bundle) = entity_extract_ids($this->entity_type, $entity);
+      if (field_info_instance($this->entity_type, $this->definition['field_name'], $bundle)) {
+        // Set the currently rendered entity.
+        $values->_field_data[$this->field_alias]['entity'] = $this->entity = $entity;
+        $items = array_merge($items, $this->set_items($values, $this->view->row_index));
+      }
+    }
+    return $items;
   }
 
   /**
    * Overridden to get the entity and put it where it is assumed to be.
    */
   public function get_value($values, $field = NULL) {
-    $entity = EntityFieldHandlerHelper::get_value($this, $values, 'entity object');
-    if (!$entity) {
+    if (!$this->entity) {
       return NULL;
     }
-    if (empty($values->_field_data[$this->field_alias]['entity'])) {
-      $values->_field_data[$this->field_alias]['entity'] = $entity;
-      $values->_field_data[$this->field_alias]['entity_type'] = $this->entity_type;
-    }
     if ($field == 'entity') {
-      return $entity;
+      return $this->entity;
     }
 
     return parent::get_value($values, $field);

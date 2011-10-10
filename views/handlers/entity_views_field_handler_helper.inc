@@ -230,6 +230,9 @@ class EntityFieldHandlerHelper {
       if (!isset($handler->wrappers[$handler->view->row_index])) {
         $values->_entity_properties[$selector] = $default;
       }
+      elseif (is_array($handler->wrappers[$handler->view->row_index])) {
+        $values->_entity_properties[$selector] = self::extract_list_wrapper_values($handler->wrappers[$handler->view->row_index], $field);
+      }
       else {
         $wrapper = $handler->wrappers[$handler->view->row_index];
         if ($field === 'entity object') {
@@ -246,6 +249,39 @@ class EntityFieldHandlerHelper {
       }
     }
     return $values->_entity_properties[$selector];
+  }
+
+  /**
+   * Helper method for extracting the values from an array of wrappers.
+   *
+   * Nested arrays of wrappers are also handled, the values are returned in a
+   * flat (not nested) array.
+   */
+  public static function extract_list_wrapper_values(array $wrappers, $field) {
+    $return = array();
+    foreach ($wrappers as $wrapper) {
+      if (is_array($wrapper)) {
+        $values = self::extract_list_wrapper_values($wrapper);
+        if ($values) {
+          $return = array_merge($return, $values);
+        }
+      }
+      else {
+        try {
+          if ($field == 'entity object') {
+            $return[] = $wrapper->value();
+          }
+          elseif(isset($wrapper->$field)) {
+            $return[] = $wrapper->$field->value(array('identifier' => TRUE));
+          }
+        }
+        catch (EntityMetadataWrapperException $e) {
+          // An exception probably signifies a non-present property, so we just
+          // ignore it.
+        }
+      }
+    }
+    return $return;
   }
 
   /**
@@ -422,7 +458,8 @@ class EntityFieldHandlerHelper {
           $results[$i] = $property;
         }
         elseif ($property instanceof EntityListWrapper) {
-          foreach (EntityListWrapper as $item) {
+          // @todo This way of accessing a list seems to trigger entity loads.
+          foreach ($property as $item) {
             $results[$i][] = $item;
           }
         }
