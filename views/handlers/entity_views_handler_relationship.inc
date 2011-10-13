@@ -6,7 +6,7 @@
  */
 
 /**
- * Relationship handler for pure entity tables.
+ * Relationship handler for data selection tables.
  *
  * @ingroup views_field_handlers
  */

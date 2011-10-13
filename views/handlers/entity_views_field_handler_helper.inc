@@ -95,8 +95,8 @@ class EntityFieldHandlerHelper {
   /**
    * Load the entities for all rows that are about to be displayed.
    *
-   * Automatically takes care of relationships, either defined via Views or via
-   * Entity API data selectors.
+   * Automatically takes care of relationships, including data selection
+   * relationships.
    */
   public static function pre_render($handler, &$values, $load_always = FALSE) {
     if (empty($values)) {
@@ -235,16 +235,16 @@ class EntityFieldHandlerHelper {
       }
       else {
         $wrapper = $handler->wrappers[$handler->view->row_index];
-        if ($field === 'entity object') {
-          $values->_entity_properties[$selector] = $wrapper->value();
+        try {
+          if ($field === 'entity object') {
+            $values->_entity_properties[$selector] = $wrapper->value();
+          }
+          else {
+              $values->_entity_properties[$selector] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
+          }
         }
-        else {
-          try {
-            $values->_entity_properties[$selector] = isset($wrapper->$field) ? $wrapper->$field->value(array('identifier' => TRUE)) : $default;
-          }
-          catch (EntityMetadataWrapperException $e) {
-            $values->_entity_properties[$selector] = $default;
-          }
+        catch (EntityMetadataWrapperException $e) {
+          $values->_entity_properties[$selector] = $default;
         }
       }
     }
@@ -416,7 +416,7 @@ class EntityFieldHandlerHelper {
    * metadata wrappers.
    *
    * A data selector is a concatenation of properties which should be followed
-   * to arrive at a desired property, that may be nested in related entities or
+   * to arrive at a desired property that may be nested in related entities or
    * structures. The separate properties are herein concatenated with colons (:).
    *
    * For instance, a data selector of "author:roles" would mean to first

@@ -326,13 +326,15 @@ function entity_property_list_extract_type($type) {
 }
 
 /**
- * Extracts the innermost type for a list type string like list<list<date>>.
+ * Extracts the innermost type for a type string like list<list<date>>.
+ *
+ * @param $type
+ *   The type to examine.
  *
  * @return
- *   The innermost type in the nested list type, or the type itself if it is no
- *   list type.
+ *   For list types, the innermost type. The type itself otherwise.
  */
-function entity_property_list_inner_type($type) {
+function entity_property_extract_innermost_type($type) {
   while (strpos($type, 'list<') === 0 && $type[strlen($type)-1] == '>') {
     $type = substr($type, 5, -1);
   }

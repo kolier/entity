@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains an example for a Views query plugin that could use the Entity API Views tables.
+ * Contains an example for a Views query plugin that could use the data selection tables.
  */
 
 /**
@@ -14,6 +14,8 @@
  * If the table doesn't contain entities, however, the get_result_wrappers()
  * method is necessary, too. In this case, if there are also no relations to any
  * entity tables, the get_result_entities() is not needed.
+ *
+ * @see entity_views_table_definition()
  */
 abstract class entity_views_example_query extends views_plugin_query {
 
@@ -42,9 +44,9 @@ abstract class entity_views_example_query extends views_plugin_query {
    *   Optionally, a relationship for which the entities should be returned.
    *
    * @return
-   *   An array with two entries, keyed by 0 and 1: the entity type of entities
-   *   returned by this method; and the array of entities, keyed by the same
-   *   indexes as the results.
+   *   A numerically indexed array containing two items: the entity type of
+   *   entities returned by this method; and the array of entities, keyed by the
+   *   same indexes as the results.
    */
   public abstract function get_result_entities($results, $relationship = NULL);
 
@@ -60,9 +62,10 @@ abstract class entity_views_example_query extends views_plugin_query {
    *   Optionally, a relationship for which the wrappers should be returned.
    *
    * @return
-   *   An array with two entries, keyed by 0 and 1: the entity type of entities
-   *   returned by this method; and the array of EntityMetadataWrapper objects
-   *   representing the results, keyed by the same indexes as the results.
+   *   A numerically indexed array containing two items: the entity type of
+   *   entities returned by this method; and the array of EntityMetadataWrapper
+   *   objects representing the results, keyed by the same indexes as the
+   *   results.
    */
   public abstract function get_result_wrappers($results, $relationship = NULL);
 

@@ -107,7 +107,7 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
   }
 
   /**
-   * Render a value as a link to the entity, if applicable.
+   * Render a value as a link to the entity if applicable.
    *
    * @param $value
    *   The value to render.

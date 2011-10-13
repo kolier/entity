@@ -37,7 +37,7 @@ function entity_views_data() {
     }
   }
 
-  // Add generic (non-base) tables for all entity types.
+  // Add data selection tables for all entity types.
   foreach (entity_get_info() as $type => $info) {
     $table = entity_views_table_definition($type);
     if ($table) {
@@ -58,6 +58,8 @@ function entity_views_data() {
  * interface defined for query plugins that are based on entity handling, and
  * which is described in the entity_views_example_query class.
  *
+ * These tables are called "data selection tables".
+ *
  * Other modules providing Views integration with new query plugins that are
  * based on entities can then use these tables as a base for their own tables
  * (by directly using this method and modifying the returned table) and/or by
@@ -72,6 +74,9 @@ function entity_views_data() {
  * can, however, support click-sorting for the field handlers in these tables.
  *
  * For a detailed discussion see http://drupal.org/node/1266036
+ *
+ * For example use see the Search views module in the Search API project:
+ * http://drupal.org/project/search_api
  *
  * @param $type
  *   The entity type whose table definition should be return.
@@ -129,7 +134,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   $field_handlers = entity_views_get_field_handlers();
 
   $property_info += entity_property_info_defaults();
-  $type = entity_property_list_inner_type($property_info['type']);
+  $type = entity_property_extract_innermost_type($property_info['type']);
   $title = $title_prefix . $property_info['label'];
   if (entity_get_info($type)) {
     $additional_field['entity type'] = $type;
@@ -190,7 +195,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
  * @return array
  *   The handlers to use for the entity tables.
  *
- * @see hook_entity_views_get_field_handlers_alter()
+ * @see hook_entity_views_field_handlers_alter()
  */
 function entity_views_get_field_handlers() {
   $field_handlers = drupal_static(__FUNCTION__);
@@ -210,13 +215,17 @@ function entity_views_get_field_handlers() {
       'entity'       => 'entity_views_handler_field_entity',
       'relationship' => 'entity_views_handler_relationship',
     );
-    drupal_alter('entity_views_get_field_handlers', $field_handlers);
+    drupal_alter('entity_views_field_handlers', $field_handlers);
   }
   return $field_handlers;
 }
 
 /**
  * Helper function for creating valid Views field identifiers out of data selectors.
+ *
+ * Uses $table to test whether the identifier is already used, and also
+ * recognizes if a definition for the same field is already present and returns
+ * that definition's identifier.
  *
  * @return string
  *   A valid Views field identifier that isn't yet used as a key in $table.
