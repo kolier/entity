@@ -390,7 +390,11 @@ function entity_metadata_field_property_get($entity, array $options, $name, $ent
 function entity_metadata_field_property_set($entity, $name, $value, $langcode, $entity_type) {
   $field = field_info_field($name);
   $columns = array_keys($field['columns']);
-  $langcode = isset($langcode) ? $langcode : LANGUAGE_NONE;
+  if (!isset($langcode)) {
+    // Try to figure out the default language used by the entity.
+    // @todo: Update once http://drupal.org/node/1260640 has been fixed.
+    $langcode = isset($entity->language) ? $entity->language : LANGUAGE_NONE;
+  }
   $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
 
   $items = array();
@@ -441,7 +445,11 @@ function entity_metadata_field_verbatim_get($entity, array $options, $name, $ent
  */
 function entity_metadata_field_verbatim_set($entity, $name, $items, $langcode) {
   $field = field_info_field($name);
-  $langcode = isset($langcode) ? $langcode : LANGUAGE_NONE;
+  if (!isset($langcode)) {
+    // Try to figure out the default language used by the entity.
+    // @todo: Update once http://drupal.org/node/1260640 has been fixed.
+    $langcode = isset($entity->language) ? $entity->language : LANGUAGE_NONE;
+  }
   $value = $field['cardinality'] == 1 ? array($items) : (array) $items;
   // Filter out any items set to NULL.
   $entity->{$name}[$langcode] = array_filter($value);
@@ -699,7 +707,9 @@ function entity_metadata_delete_file($fid) {
  * Callback to view nodes.
  */
 function entity_metadata_view_node($entities, $view_mode = 'full', $langcode = NULL) {
-  return node_view_multiple($entities, $view_mode, 0, $langcode);
+  $result = node_view_multiple($entities, $view_mode, 0, $langcode);
+  // Make sure to key the result with 'node' instead of 'nodes'.
+  return array('node' => reset($result));
 }
 
 /**
