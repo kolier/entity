@@ -6,8 +6,13 @@
  */
 
 /**
- * A handler to provide proper displays for entities.
+ * A handler to provide proper displays for entities retrieved via data selection.
  *
+ * This handler may only be used in conjunction with data selection based Views
+ * tables or other base tables using a query plugin that supports data
+ * selection.
+ *
+ * @see entity_views_field_definition()
  * @ingroup views_field_handlers
  */
 class entity_views_handler_field_entity extends views_handler_field_entity {

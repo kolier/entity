@@ -37,7 +37,7 @@ function entity_views_data() {
     }
   }
 
-  // Add data selection tables for all entity types.
+  // Add tables based upon data selection "queries" for all entity types.
   foreach (entity_get_info() as $type => $info) {
     $table = entity_views_table_definition($type);
     if ($table) {
@@ -49,10 +49,10 @@ function entity_views_data() {
 }
 
 /**
- * Helper function for getting the entity Views table definition for a type.
+ * Helper function for getting data selection based entity Views table definitions.
  *
- * This creates extra tables for each entity type that aren't associated with a
- * query plugin (and thus aren't base tables) and just rely on the entities to
+ * This creates extra tables for each entity type that are not associated with a
+ * query plugin (and thus are not base tables) and just rely on the entities to
  * retrieve the displayed data. To obtain the entities corresponding to a
  * certain result set, the field handlers defined on the table use a generic
  * interface defined for query plugins that are based on entity handling, and
@@ -75,14 +75,15 @@ function entity_views_data() {
  *
  * For a detailed discussion see http://drupal.org/node/1266036
  *
- * For example use see the Search views module in the Search API project:
+ * For example use see the Search API views module in the Search API project:
  * http://drupal.org/project/search_api
  *
  * @param $type
- *   The entity type whose table definition should be return.
+ *   The entity type whose table definition should be returned.
  *
  * @return
- *   An array containing a generic Views table definition for the entity type.
+ *   An array containing the data selection Views table definition for the
+ *   entity type.
  *
  * @see entity_views_field_definition()
  */
@@ -106,7 +107,7 @@ function entity_views_table_definition($type) {
 }
 
 /**
- * Helper function for adding a Views field definition.
+ * Helper function for adding a Views field definition to data selection based Views tables.
  *
  * @param $field
  *   The key to be used for the property's field handler (and as the prefix for
@@ -193,7 +194,7 @@ function entity_views_field_definition($field, array $property_info, array &$tab
 
 /**
  * @return array
- *   The handlers to use for the entity tables.
+ *   The handlers to use for the data selection based Views tables.
  *
  * @see hook_entity_views_field_handlers_alter()
  */
@@ -228,7 +229,7 @@ function entity_views_get_field_handlers() {
  * that definition's identifier.
  *
  * @return string
- *   A valid Views field identifier that isn't yet used as a key in $table.
+ *   A valid Views field identifier that is not yet used as a key in $table.
  */
 function _entity_views_field_identifier($field, array $table) {
   $key = $base = preg_replace('/[^a-zA-Z0-9]+/S', '_', $field);

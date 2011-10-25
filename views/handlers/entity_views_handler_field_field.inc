@@ -8,8 +8,14 @@
 /**
  * A handler to provide proper displays for Field API fields.
  *
- * Overrides the default Views handler to retrieve the data from an entity.
+ * Overrides the default Views handler to retrieve the data from an entity via
+ * data selection.
  *
+ * This handler may only be used in conjunction with data selection based Views
+ * tables or other base tables using a query plugin that supports data
+ * selection.
+ *
+ * @see entity_views_field_definition()
  * @ingroup views_field_handlers
  */
 class entity_views_handler_field_field extends views_handler_field_field {
@@ -58,9 +64,7 @@ class entity_views_handler_field_field extends views_handler_field_field {
   /**
    * Override so it doesn't do any harm (or, anything at all).
    */
-  public function post_execute(&$values) {
-
-  }
+  public function post_execute(&$values) { }
 
   /**
    * Load the entities for all rows that are about to be displayed.
@@ -105,8 +109,6 @@ class entity_views_handler_field_field extends views_handler_field_field {
     if ($field == 'entity') {
       return $this->entity;
     }
-
     return parent::get_value($values, $field);
   }
-
 }

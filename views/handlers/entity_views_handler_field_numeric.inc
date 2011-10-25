@@ -8,8 +8,14 @@
 /**
  * Render a field as a numeric value.
  *
- * Overrides the default Views handler to retrieve the data from an entity.
+ * Overrides the default Views handler to retrieve the data from an entity via
+ * data selection.
  *
+ * This handler may only be used in conjunction with data selection based Views
+ * tables or other base tables using a query plugin that supports data
+ * selection.
+ *
+ * @see entity_views_field_definition()
  * @ingroup views_field_handlers
  */
 class entity_views_handler_field_numeric extends views_handler_field_numeric {

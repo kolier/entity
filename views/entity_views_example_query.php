@@ -6,14 +6,14 @@
  */
 
 /**
- * Describes the additional methods looked for on a query plugin by the Entity API.
+ * Describes the additional methods looked for on a query plugin if data selection based tables or fields are used.
  *
  * Only get_result_entities() needs to be present, so results can be retrieved.
  * The other methods are optional.
  *
- * If the table doesn't contain entities, however, the get_result_wrappers()
- * method is necessary, too. In this case, if there are also no relations to any
- * entity tables, the get_result_entities() is not needed.
+ * If the table does not contain entities, however, the get_result_wrappers()
+ * method is necessary, too. If this is the case and there are no relations to
+ * entity tables, the get_result_entities() method is not needed.
  *
  * @see entity_views_table_definition()
  */

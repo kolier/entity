@@ -8,6 +8,11 @@
 /**
  * A handler to provide proper displays for values chosen from a set of options.
  *
+ * This handler may only be used in conjunction with data selection based Views
+ * tables or other base tables using a query plugin that supports data
+ * selection.
+ *
+ * @see entity_views_field_definition()
  * @ingroup views_field_handlers
  */
 class entity_views_handler_field_options extends views_handler_field {

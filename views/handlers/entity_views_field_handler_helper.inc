@@ -8,7 +8,9 @@
 /**
  * Helper class containing static implementations of common field handler methods.
  *
- * Used by the generic entity field handlers to avoid code duplication.
+ * Used by the data selection entity field handlers to avoid code duplication.
+ *
+ * @see entity_views_table_definition()
  */
 class EntityFieldHandlerHelper {
 
@@ -417,14 +419,14 @@ class EntityFieldHandlerHelper {
    *
    * A data selector is a concatenation of properties which should be followed
    * to arrive at a desired property that may be nested in related entities or
-   * structures. The separate properties are herein concatenated with colons (:).
+   * structures. The separate properties are herein concatenated with colons.
    *
    * For instance, a data selector of "author:roles" would mean to first
    * access the "author" property of the given wrapper, and then for this new
    * wrapper to access and return the "roles" property.
    *
-   * Lists of values in a property are automatically handled. They will result in
-   * nested arrays being returned.
+   * Lists of values in a property are automatically handled. They will result
+   * in nested arrays being returned.
    *
    * @param array $wrappers
    *   The EntityMetadataWrapper objects from which to extract data.
