@@ -18,6 +18,16 @@
 class entity_views_handler_relationship extends views_handler_relationship {
 
   /**
+   * Slightly modify the options form provided by the parent handler.
+   */
+  public function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    // This won't work with data selector-based relationships, as we only
+    // inspect those *after* the results are known.
+    $form['required']['#access'] = FALSE;
+  }
+
+  /**
    * Called to implement a relationship in a query.
    *
    * As we don't add any data to the query itself, we don't have to do anything
@@ -26,7 +36,7 @@ class entity_views_handler_relationship extends views_handler_relationship {
    * blowing up by calling inexistent methods on the query plugin.
    */
   public function query() {
-    $this->alias = $this->real_field;
+    $this->alias = $this->options['id'];
   }
 
 }
