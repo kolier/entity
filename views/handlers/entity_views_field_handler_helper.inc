@@ -263,7 +263,7 @@ class EntityFieldHandlerHelper {
     $return = array();
     foreach ($wrappers as $wrapper) {
       if (is_array($wrapper)) {
-        $values = self::extract_list_wrapper_values($wrapper);
+        $values = self::extract_list_wrapper_values($wrapper, $field);
         if ($values) {
           $return = array_merge($return, $values);
         }
@@ -484,30 +484,33 @@ class EntityFieldHandlerHelper {
       }
     }
 
+    // If there are no further parts in the selector, we are done now.
+    if (empty($parts[1])) {
+      return $results;
+    }
+
     // We need to handle multiple values.
     if (is_array(reset($results))) {
       $all_wrappers = array();
       $map = array();
       $j = 0;
       foreach ($results as $i => $item_wrappers) {
-        foreach ($item_wrappers as $i => $item_wrapper) {
+        foreach ($item_wrappers as $item_wrapper) {
           $all_wrappers[$j] = $item_wrapper;
           $map[$j] = $i;
           $j++;
         }
       }
-      $result = self::extract_property_multiple($all_wrappers, $selector);
+      $results = self::extract_property_multiple($all_wrappers, $parts[1]);
+      $return = array();
       // Map the results back.
-      foreach ($result as $j => $result_wrapper) {
-        $results[$map[$j]][] = $result_wrapper;
+      foreach ($results as $j => $result_wrapper) {
+        $return[$map[$j]][] = $result_wrapper;
       }
-      return $results;
+      return $return;
     }
 
-    if (!empty($parts[1])) {
-      return self::extract_property_multiple($results, $parts[1]);
-    }
-    return $results;
+    return self::extract_property_multiple($results, $parts[1]);
   }
 
 }
