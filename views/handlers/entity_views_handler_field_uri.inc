@@ -41,6 +41,11 @@ class entity_views_handler_field_uri extends views_handler_field_url {
   public $current_value;
 
   /**
+   * Stores the current entity when rendering list fields.
+   */
+  public $current_entity;
+
+  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
   public function query() {

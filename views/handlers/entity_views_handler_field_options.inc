@@ -38,6 +38,11 @@ class entity_views_handler_field_options extends views_handler_field {
   public $current_value;
 
   /**
+   * Stores the current entity when rendering list fields.
+   */
+  public $current_entity;
+
+  /**
    * The key / name mapping for the options.
    */
   public $option_list;
