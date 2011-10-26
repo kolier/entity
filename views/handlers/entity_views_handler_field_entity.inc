@@ -97,6 +97,7 @@ class entity_views_handler_field_entity extends views_handler_field_entity {
         '#options' => $options,
         '#title' => t('View mode'),
         '#default_value' => $this->options['view_mode'],
+        '#dependency' => array('edit-options-display' => array('view')),
       );
     }
     else {
