@@ -137,11 +137,12 @@ function entity_views_field_definition($field, array $property_info, array &$tab
   $property_info += entity_property_info_defaults();
   $type = entity_property_extract_innermost_type($property_info['type']);
   $title = $title_prefix . $property_info['label'];
-  if (entity_get_info($type)) {
+  if ($info = entity_get_info($type)) {
     $additional_field['entity type'] = $type;
     $additional['relationship'] = array(
       'handler' => $field_handlers['relationship'],
       'base' => 'entity_' . $type,
+      'base field' => $info['entity keys']['id'],
       'relationship field' => $field,
       'label' => $title,
     );
