@@ -118,54 +118,32 @@ class EntityFieldHandlerHelper {
         return;
       }
     }
+
     if (method_exists($handler->query, 'get_result_wrappers')) {
-      list($type, $wrappers) = $handler->query->get_result_wrappers($values, NULL);
-    }
-    elseif (method_exists($handler->query, 'get_result_entities')) {
-      list($type, $entities) = $handler->query->get_result_entities($values, NULL);
-      $wrappers = array();
-      foreach ($entities as $id => $entity) {
-        $wrappers[$id] = entity_metadata_wrapper($type, $entity);
-      }
+      list($handler->entity_type, $handler->wrappers) = $handler->query->get_result_wrappers($values, $handler->relationship);
     }
     else {
-      return;
-    }
-
-    $relationship = self::construct_property_selector($handler);
-    if ($relationship) {
-      $wrappers = self::extract_property_multiple($wrappers, $relationship);
-      unset($entities);
-      // Get the first contained wrapper (which might be somewhere down in a
-      // nested array structure) to determine the type.
-      $wrapper = $wrappers;
-      while (is_array($wrapper)) {
-        $wrapper = array_filter($wrapper);
-        $wrapper = reset($wrapper);
-      }
-      if ($wrapper) {
-        $type = $wrapper->type();
+      list($handler->entity_type, $entities) = $handler->query->get_result_entities($values, $handler->relationship);
+      $handler->wrappers = array();
+      foreach ($entities as $id => $entity) {
+        $handler->wrappers[$id] = entity_metadata_wrapper($type, $entity);
       }
     }
-    $wrappers = array_filter($wrappers);
-
-    $handler->entity_type = $type;
-    $handler->wrappers = $wrappers;
   }
 
   /**
    * Return an Entity API data selector for the given handler's relationship.
    *
-   * E.g., a selector for the name of the tags associated with a node would look
-   * like this:
+   * A data selector is a concatenation of properties which should be followed
+   * to arrive at a desired property that may be nested in related entities or
+   * structures. The separate properties are herein concatenated with colons.
    *
-   *   field_tags:name
+   * For instance, a data selector of "author:roles" would mean to first
+   * access the "author" property of the given wrapper, and then for this new
+   * wrapper to access and return the "roles" property.
    *
-   * Lists are handled automatically. In the above example, if field_tags is a
-   * multi-valued field of taxonomy term references (type "list<taxonomy_term")
-   * then the value extracted for this selector from a single entity would be an
-   * array of all term names (which might also be empty, or contain only one
-   * entry).
+   * Lists of entities are handled automatically by always returning only the
+   * first entity.
    *
    * @param $handler
    *   The handler for which to construct the selector.
@@ -175,8 +153,6 @@ class EntityFieldHandlerHelper {
    *
    * @return
    *   An Entity API data selector for the given handler's relationship.
-   *
-   * @see extract_property_multiple()
    */
   public static function construct_property_selector($handler, $complete = FALSE) {
     $return = '';
@@ -408,109 +384,6 @@ class EntityFieldHandlerHelper {
     }
     // Default fallback in case the field handler doesn't provide the method.
     return is_scalar($value) ? check_plain($value) : nl2br(check_plain(print_r($value, TRUE)));
-  }
-
-  /**
-   * Extracts data from several metadata wrappers based on a data selector.
-   *
-   * All metadata wrappers passed to this function have to be based on the exact
-   * same property information. The data will be returned wrapped by one or more
-   * metadata wrappers.
-   *
-   * A data selector is a concatenation of properties which should be followed
-   * to arrive at a desired property that may be nested in related entities or
-   * structures. The separate properties are herein concatenated with colons.
-   *
-   * For instance, a data selector of "author:roles" would mean to first
-   * access the "author" property of the given wrapper, and then for this new
-   * wrapper to access and return the "roles" property.
-   *
-   * Lists of values in a property are automatically handled. They will result
-   * in nested arrays being returned.
-   *
-   * @param array $wrappers
-   *   The EntityMetadataWrapper objects from which to extract data.
-   * @param $selector
-   *   The selector specifying the data to extract.
-   * @param array $options
-   *   An array of options that should be passed to the
-   *   EntityMetadataWrapper::value() method (see there).
-   *
-   * @return array
-   *   The extracted property value(s) for each wrapper, keyed to the same key
-   *   that was used for the respecive wrapper in $wrappers. All extracted
-   *   properties are returned as metadata wrappers.
-   */
-  public static function extract_property_multiple(array $wrappers, $selector) {
-    $parts = explode(':', $selector, 2);
-    $name = $parts[0];
-
-    $results = array();
-    $entities = array();
-    foreach ($wrappers as $i => $wrapper) {
-      try {
-        $property = $wrapper->$name;
-        if ($property instanceof EntityDrupalWrapper) {
-          // Remember the entity IDs to later load all at once (so as to
-          // properly utilize multiple load functionality).
-          $id = $property->getIdentifier();
-          $entities[$property->type()][$i] = $id;
-        }
-        elseif ($property instanceof EntityStructureWrapper) {
-          $results[$i] = $property;
-        }
-        elseif ($property instanceof EntityListWrapper) {
-          // @todo This way of accessing a list seems to trigger entity loads.
-          foreach ($property as $item) {
-            $results[$i][] = $item;
-          }
-        }
-        // Do nothing in case it cannot be applied.
-      }
-      catch (EntityMetadataWrapperException $e) {
-        // Skip single empty properties.
-      }
-    }
-
-    if ($entities) {
-      // Map back the loaded entities back to the results array.
-      foreach ($entities as $type => $id_map) {
-        $loaded = entity_load($type, $id_map);
-        foreach ($id_map as $i => $id) {
-          if (isset($loaded[$id])) {
-            $results[$i] = entity_metadata_wrapper($type, $loaded[$id]);
-          }
-        }
-      }
-    }
-
-    // If there are no further parts in the selector, we are done now.
-    if (empty($parts[1])) {
-      return $results;
-    }
-
-    // We need to handle multiple values.
-    if (is_array(reset($results))) {
-      $all_wrappers = array();
-      $map = array();
-      $j = 0;
-      foreach ($results as $i => $item_wrappers) {
-        foreach ($item_wrappers as $item_wrapper) {
-          $all_wrappers[$j] = $item_wrapper;
-          $map[$j] = $i;
-          $j++;
-        }
-      }
-      $results = self::extract_property_multiple($all_wrappers, $parts[1]);
-      $return = array();
-      // Map the results back.
-      foreach ($results as $j => $result_wrapper) {
-        $return[$map[$j]][] = $result_wrapper;
-      }
-      return $return;
-    }
-
-    return self::extract_property_multiple($results, $parts[1]);
   }
 
 }
