@@ -25,6 +25,15 @@ class entity_views_handler_relationship extends views_handler_relationship {
     // This won't work with data selector-based relationships, as we only
     // inspect those *after* the results are known.
     $form['required']['#access'] = FALSE;
+    // Notify the user of our restrictions regarding lists of entities, if
+    // appropriate.
+    if (!empty($this->definition['multiple'])) {
+      $form['multiple_note'] = array(
+        '#markup' => t('<strong>Note:</strong> This is a multi-valued relationship, which is currently not supported. ' .
+            'Only the first related entity will be shown.'),
+        '#weight' => -5,
+      );
+    }
   }
 
   /**

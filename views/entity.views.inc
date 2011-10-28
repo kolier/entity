@@ -146,7 +146,12 @@ function entity_views_field_definition($field, array $property_info, array &$tab
       'relationship field' => $field,
       'label' => $title,
     );
-    // They could also add handlers for specific entity types.
+    if ($property_info['type'] != $type) {
+      // This is a list of entities, so we should mark the relationship as such.
+      $additional['relationship']['multiple'] = TRUE;
+    }
+    // Implementers of the field handlers alter hook could add handlers for
+    // specific entity types.
     if (!isset($field_handlers[$type])) {
       $type = 'entity';
     }
