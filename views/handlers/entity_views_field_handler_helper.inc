@@ -225,9 +225,6 @@ class EntityFieldHandlerHelper {
     if (!isset($field) && isset($handler->current_value)) {
       return $handler->current_value;
     }
-    if ($field == 'entity object' && isset($handler->current_entity)) {
-      return $handler->current_entity;
-    }
     $field = isset($field) ? $field : $handler->base_field;
     $selector = self::construct_property_selector($handler);
     $selector = $selector ? "$selector:$field" : $field;
@@ -326,7 +323,7 @@ class EntityFieldHandlerHelper {
    * @return
    *   The rendered value for the given list.
    */
-  public static function render_list($handler, $list, $values, $entities = NULL) {
+  public static function render_list($handler, $list, $values) {
     // Allow easy overriding of this behaviour in the specific field handler.
     if (method_exists($handler, 'render_list')) {
       return $handler->render_list($list, $values);
@@ -347,18 +344,11 @@ class EntityFieldHandlerHelper {
       }
     }
     $inner_values = array();
-    if (!isset($entities)) {
-      $entities = $handler->get_value($values, 'entity object');
-    }
-    foreach ($list as $i => $value) {
-      if (is_array($entities)) {
-        $handler->current_entity = isset($entities[$i]) ? $entities[$i] : (is_array($value) ? array() : NULL);
-      }
-      $value = is_array($value) ? self::render_list($handler, $value, $values, $handler->current_entity) : self::render_entity_link($handler, $value, $values);
+    foreach ($list as $value) {
+      $value = is_array($value) ? self::render_list($handler, $value, $values) : self::render_entity_link($handler, $value, $values);
       if ($value) {
         $inner_values[] = $value;
       }
-      $handler->current_entity = NULL;
     }
     $separator = isset($handler->options['list']['separator']) ? $handler->options['list']['separator'] : ', ';
     return implode($separator, $inner_values);

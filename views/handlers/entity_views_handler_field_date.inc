@@ -41,11 +41,6 @@ class entity_views_handler_field_date extends views_handler_field_date {
   public $current_value;
 
   /**
-   * Stores the current entity when rendering list fields.
-   */
-  public $current_entity;
-
-  /**
    * Overridden to add the field for the entity ID (if necessary).
    */
   public function query() {
