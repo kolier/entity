@@ -38,17 +38,21 @@ abstract class entity_views_example_query extends views_plugin_query {
   /**
    * Returns the according entity objects for the given query results.
    *
+   * This is compatible to the get_result_entities() method used by Views.
+   *
    * @param $results
    *   The results of the query, as returned by this query plugin.
    * @param $relationship
    *   Optionally, a relationship for which the entities should be returned.
+   * @param $field
+   *   Optionally, the field for which the entity should be returned.
    *
    * @return
    *   A numerically indexed array containing two items: the entity type of
    *   entities returned by this method; and the array of entities, keyed by the
    *   same indexes as the results.
    */
-  public abstract function get_result_entities($results, $relationship = NULL);
+  public abstract function get_result_entities($results, $relationship = NULL, $field = NULL);
 
   /**
    * Returns the according metadata wrappers for the given query results.
@@ -60,6 +64,8 @@ abstract class entity_views_example_query extends views_plugin_query {
    *   The results of the query, as returned by this query plugin.
    * @param $relationship
    *   Optionally, a relationship for which the wrappers should be returned.
+   * @param $field
+   *   Optionally, the field for which the entity should be returned.
    *
    * @return
    *   A numerically indexed array containing two items: the entity type of
@@ -67,6 +73,6 @@ abstract class entity_views_example_query extends views_plugin_query {
    *   objects representing the results, keyed by the same indexes as the
    *   results.
    */
-  public abstract function get_result_wrappers($results, $relationship = NULL);
+  public abstract function get_result_wrappers($results, $relationship = NULL, $field = NULL);
 
 }
