@@ -178,6 +178,81 @@ class EntityFieldHandlerHelper {
   }
 
   /**
+   * Extracts data from several metadata wrappers based on a data selector.
+   *
+   * All metadata wrappers passed to this function have to be based on the exact
+   * same property information. The data will be returned wrapped by one or more
+   * metadata wrappers.
+   *
+   * Can be used in query plugins for the get_result_entities() and
+   * get_result_wrappers() methods.
+   *
+   * @param array $wrappers
+   *   The EntityMetadataWrapper objects from which to extract data.
+   * @param $selector
+   *   The selector specifying the data to extract.
+   *
+   * @return array
+   *   An array with numeric indices, containing the type of the extracted
+   *   wrappers in the first element. The second element of the array contains
+   *   the extracted property value(s) for each wrapper, keyed to the same key
+   *   that was used for the respecive wrapper in $wrappers. All extracted
+   *   properties are returned as metadata wrappers.
+   */
+  public static function extract_property_multiple(array $wrappers, $selector) {
+    $parts = explode(':', $selector, 2);
+    $name = $parts[0];
+
+    $results = array();
+    $entities = array();
+    $type = '';
+    foreach ($wrappers as $i => $wrapper) {
+      try {
+        $property = $wrapper->$name;
+        $type = $property->type();
+        if ($property instanceof EntityDrupalWrapper) {
+          // Remember the entity IDs to later load all at once (so as to
+          // properly utilize multiple load functionality).
+          $id = $property->getIdentifier();
+          $entities[$type][$i] = $id;
+        }
+        elseif ($property instanceof EntityStructureWrapper) {
+          $results[$i] = $property;
+        }
+        elseif ($property instanceof EntityListWrapper) {
+          foreach ($property as $item) {
+            $results[$i] = $item;
+            $type = $item->type();
+            break;
+          }
+        }
+        // Do nothing in case it cannot be applied.
+      }
+      catch (EntityMetadataWrapperException $e) {
+        // Skip single empty properties.
+      }
+    }
+
+    if ($entities) {
+      // Map back the loaded entities back to the results array.
+      foreach ($entities as $type => $id_map) {
+        $loaded = entity_load($type, $id_map);
+        foreach ($id_map as $i => $id) {
+          if (isset($loaded[$id])) {
+            $results[$i] = entity_metadata_wrapper($type, $loaded[$id]);
+          }
+        }
+      }
+    }
+
+    // If there are no further parts in the selector, we are done now.
+    if (empty($parts[1])) {
+      return array($type, $results);
+    }
+    return self::extract_property_multiple($results, $parts[1]);
+  }
+
+  /**
    * Get the value of a certain data selector.
    *
    * Uses $values->_entity_properties to look for already extracted properties.
