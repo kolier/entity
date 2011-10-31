@@ -40,6 +40,12 @@ abstract class entity_views_example_query extends views_plugin_query {
    *
    * This is compatible to the get_result_entities() method used by Views.
    *
+   * The method is responsible for resolving the relationship and returning the
+   * entity objects for that relationship. The helper methods
+   * EntityFieldHandlerHelper::construct_property_selector() and
+   * EntityFieldHandlerHelper::extract_property_multiple() can be used to do
+   * this.
+   *
    * @param $results
    *   The results of the query, as returned by this query plugin.
    * @param $relationship
@@ -51,6 +57,8 @@ abstract class entity_views_example_query extends views_plugin_query {
    *   A numerically indexed array containing two items: the entity type of
    *   entities returned by this method; and the array of entities, keyed by the
    *   same indexes as the results.
+   *
+   * @see EntityFieldHandlerHelper::extract_property_multiple()
    */
   public abstract function get_result_entities($results, $relationship = NULL, $field = NULL);
 
