@@ -1029,11 +1029,13 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
     if ($this->isEntityList && empty($options['identifier']) && $this->dataAvailable()) {
       $list = parent::value();
       $entities = $list ? entity_load($this->get(0)->type, $list) : array();
-      // Make sure to keep the array keys as present in the list.
-      foreach ($list as $key => $id) {
-        // In case the entity cannot be loaded, we return NULL just as for empty
-        // properties.
-        $list[$key] = isset($entities[$id]) ? $entities[$id] : NULL;
+      if ($list) {
+        // Make sure to keep the array keys as present in the list.
+        foreach ($list as $key => $id) {
+          // In case the entity cannot be loaded, we return NULL just as for empty
+          // properties.
+          $list[$key] = isset($entities[$id]) ? $entities[$id] : NULL;
+        }
       }
       return $list;
     }
